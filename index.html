@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark h-full">
+<html lang="fr" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>99 Fléchettes au 20 - Autodarts Edition</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -12,351 +12,316 @@
             theme: {
                 extend: {
                     colors: {
-                        autodarts: {
-                            bg: '#0f172a',
+                        dart: {
+                            base: '#0f172a',
                             card: '#1e293b',
-                            border: '#334155',
-                            green: '#10b981',
-                            neonGreen: '#00ff87',
-                            cyan: '#06b6d4',
-                            blue: '#3b82f6',
-                            accent: '#6366f1',
-                            red: '#ef4444'
+                            accent: '#06b6d4',
+                            triple: '#10b981',
+                            double: '#3b82f6',
+                            single: '#8b5cf6',
+                            miss: '#ef4444'
                         }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
                     }
                 }
             }
         }
     </script>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for statistics -->
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Canvas Confetti -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0b0f19;
-            color: #f8fafc;
-            user-select: none;
-        }
-
-        .neon-border {
-            box-shadow: 0 0 15px rgba(0, 255, 135, 0.2);
-        }
-
-        .neon-border-cyan {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
-        }
-
-        .neon-text-green {
-            text-shadow: 0 0 10px rgba(0, 255, 135, 0.5);
-        }
-
-        .neon-text-cyan {
-            text-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
-        }
-
-        .btn-hit {
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-hit:active {
-            transform: scale(0.95);
-        }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
-        }
-    </style>
 </head>
-<body class="h-full flex flex-col justify-between bg-[#0b0f19] text-gray-100 overflow-x-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
 
-    <!-- Navbar -->
-    <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+    <!-- Navbar Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 px-4 py-3">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-900 font-extrabold text-xl shadow-lg shadow-emerald-500/20">
-                    99
+                <div class="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400">
+                    <i data-lucide="target" class="w-6 h-6"></i>
                 </div>
                 <div>
-                    <h1 class="font-extrabold text-lg tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
                         99 Fléchettes au 20
                     </h1>
-                    <p class="text-xs text-slate-400 font-medium">Autodarts Companion Mode</p>
+                    <p class="text-xs text-slate-400">Autodarts Companion Mode</p>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2 sm:space-x-4">
-                <!-- Autodarts WS Connection Status Badge -->
-                <button id="wsStatusBtn" onclick="openWsModal()" class="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-slate-600 text-xs transition">
-                    <span id="wsIndicator" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span id="wsText" class="hidden sm:inline text-slate-300 font-medium">Manuel / WS Déconnecté</span>
+            <div class="flex items-center space-x-3">
+                <!-- Status WebSocket -->
+                <button id="ws-status-btn" onclick="openWsModal()" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
+                    <span id="ws-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span id="ws-text" class="text-slate-300">WS Déconnecté</span>
                 </button>
 
-                <!-- Audio Toggle Button -->
-                <button id="audioBtn" onclick="toggleAudio()" class="p-2 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-emerald-400 transition" title="Activer/Désactiver le son">
-                    <i class="fas fa-volume-up text-sm"></i>
+                <button onclick="toggleSound()" id="sound-btn" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition text-slate-300">
+                    <i data-lucide="volume-2" class="w-5 h-5"></i>
                 </button>
 
-                <!-- Highscores Button -->
-                <button onclick="openLeaderboard()" class="p-2 sm:px-3 sm:py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-semibold transition flex items-center space-x-1.5">
-                    <i class="fas fa-trophy"></i>
-                    <span class="hidden sm:inline">Classement</span>
+                <button onclick="openLeaderboard()" class="flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-lg shadow-emerald-900/20">
+                    <i data-lucide="trophy" class="w-4 h-4"></i>
+                    <span>Classement</span>
                 </button>
 
-                <!-- Reset Game Button -->
-                <button onclick="confirmReset()" class="p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs transition" title="Recommencer">
-                    <i class="fas fa-redo-alt"></i>
+                <button onclick="resetGame()" class="p-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-400 rounded-lg transition">
+                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
-        
-        <!-- Left Column: Primary Counters & Entry Interface (7 cols on large screens) -->
-        <div class="lg:col-span-7 flex flex-col space-y-4">
-            
-            <!-- Top Summary Card (Main Counters) -->
-            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 sm:p-6 shadow-xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500"></div>
+    <!-- Main Content Grid -->
+    <main class="max-w-7xl mx-auto px-4 py-6 w-full grow grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-                <div class="grid grid-cols-3 gap-2 sm:gap-4 text-center">
-                    <!-- Fléchettes Restantes -->
-                    <div class="bg-slate-950/60 p-3 sm:p-4 rounded-xl border border-slate-800/80">
-                        <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-1">Restantes</span>
-                        <div id="dartsLeft" class="text-3xl sm:text-5xl font-black text-emerald-400 font-mono neon-text-green">99</div>
-                        <span class="text-[10px] text-slate-500 mt-1 block">/ 99 fléchettes</span>
-                    </div>
+        <!-- Column Left: Game Controls & Visual Target (8 cols) -->
+        <div class="lg:col-span-7 flex flex-col space-y-6">
 
-                    <!-- Score Total -->
-                    <div class="bg-slate-950/60 p-3 sm:p-4 rounded-xl border border-slate-800/80">
-                        <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-1">Score Total</span>
-                        <div id="totalScore" class="text-3xl sm:text-5xl font-black text-cyan-400 font-mono neon-text-cyan">0</div>
-                        <span id="maxPossible" class="text-[10px] text-slate-500 mt-1 block">Max théorique: 297</span>
-                    </div>
-
-                    <!-- Volée en Cours -->
-                    <div class="bg-slate-950/60 p-3 sm:p-4 rounded-xl border border-slate-800/80">
-                        <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold block mb-1">Volée <span id="turnNumber">1</span>/33</span>
-                        <div id="currentTurnScore" class="text-3xl sm:text-5xl font-black text-indigo-400 font-mono">0</div>
-                        <span class="text-[10px] text-slate-500 mt-1 block">Pts cette volée</span>
-                    </div>
+            <!-- Principal Stats Banner -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Restantes</p>
+                    <p id="darts-left" class="text-4xl font-extrabold text-white mt-1">99</p>
+                    <p class="text-[10px] text-slate-500 mt-1">/ 99 fléchettes</p>
                 </div>
 
-                <!-- Volée actuelle : Détail des 3 fléchettes -->
-                <div class="mt-5 pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                    <span class="text-xs text-slate-400 font-medium">Volée actuelle :</span>
-                    <div class="flex space-x-2 sm:space-x-3">
-                        <div id="dart-slot-0" class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-950 border-2 border-slate-800 flex items-center justify-center font-bold text-lg text-slate-500 shadow-inner">
-                            -
-                        </div>
-                        <div id="dart-slot-1" class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-950 border-2 border-slate-800 flex items-center justify-center font-bold text-lg text-slate-500 shadow-inner">
-                            -
-                        </div>
-                        <div id="dart-slot-2" class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-950 border-2 border-slate-800 flex items-center justify-center font-bold text-lg text-slate-500 shadow-inner">
-                            -
-                        </div>
-                    </div>
-                    <button onclick="undoLastDart()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-semibold border border-slate-700 transition flex items-center space-x-1">
-                        <i class="fas fa-undo"></i>
-                        <span class="hidden sm:inline">Annuler</span>
-                    </button>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Score Total</p>
+                    <p id="total-score" class="text-4xl font-extrabold text-cyan-400 mt-1">0</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Max théorique: 297</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Volée 1/33</p>
+                    <p id="current-turn-score" class="text-4xl font-extrabold text-emerald-400 mt-1">0</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Pts cette volée</p>
                 </div>
             </div>
 
-            <!-- Input Controls (Target Hit Input) -->
-            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 sm:p-6 shadow-xl flex-grow flex flex-col justify-between">
+            <!-- Current Turn Slot Display -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs font-medium text-slate-400">Volée actuelle :</span>
+                    <div class="flex space-x-2">
+                        <div id="slot-1" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
+                        <div id="slot-2" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
+                        <div id="slot-3" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
+                    </div>
+                </div>
+
+                <button onclick="undoLastDart()" class="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-amber-400 transition">
+                    <i data-lucide="undo-2" class="w-4 h-4"></i>
+                    <span>Annuler</span>
+                </button>
+            </div>
+
+            <!-- Manual Input Buttons -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm uppercase tracking-wider font-bold text-slate-300 flex items-center gap-2">
-                        <i class="fas fa-bullseye text-emerald-400"></i> Saisie des impacts
+                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i data-lucide="disc" class="w-4 h-4 text-cyan-400"></i>
+                        Saisie des Impacts
                     </h2>
-                    <span class="text-xs text-slate-500 hidden sm:inline">Raccourcis : <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">S</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">D</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">T</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300 font-mono">M</kbd></span>
+                    <span class="text-[11px] text-slate-500 font-mono">Raccourcis : <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">S</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">D</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">T</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">M</kbd></span>
                 </div>
 
-                <!-- Quick Hit Keypad -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    <!-- Triple 20 -->
-                    <button onclick="registerDart('T20', 3)" class="btn-hit p-4 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/30 border-2 border-emerald-500/60 hover:border-emerald-400 text-emerald-300 flex flex-col items-center justify-center group shadow-lg">
-                        <span class="text-2xl font-black group-hover:scale-110 transition-transform">T20</span>
-                        <span class="text-xs font-semibold text-emerald-400/80 mt-1">+3 Points</span>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="addDart('T20')" class="flex flex-col items-center justify-center p-4 bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/50 rounded-xl transition group">
+                        <span class="text-2xl font-black text-emerald-400 group-hover:scale-110 transition">T20</span>
+                        <span class="text-xs text-emerald-300/70 font-medium mt-1">+3 Points</span>
                     </button>
 
-                    <!-- Double 20 -->
-                    <button onclick="registerDart('D20', 2)" class="btn-hit p-4 rounded-xl bg-gradient-to-br from-cyan-500/20 to-cyan-600/30 border-2 border-cyan-500/60 hover:border-cyan-400 text-cyan-300 flex flex-col items-center justify-center group shadow-lg">
-                        <span class="text-2xl font-black group-hover:scale-110 transition-transform">D20</span>
-                        <span class="text-xs font-semibold text-cyan-400/80 mt-1">+2 Points</span>
+                    <button onclick="addDart('D20')" class="flex flex-col items-center justify-center p-4 bg-blue-950/40 border border-blue-500/30 hover:bg-blue-900/50 rounded-xl transition group">
+                        <span class="text-2xl font-black text-blue-400 group-hover:scale-110 transition">D20</span>
+                        <span class="text-xs text-blue-300/70 font-medium mt-1">+2 Points</span>
                     </button>
 
-                    <!-- Simple 20 -->
-                    <button onclick="registerDart('S20', 1)" class="btn-hit p-4 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/30 border-2 border-indigo-500/60 hover:border-indigo-400 text-indigo-300 flex flex-col items-center justify-center group shadow-lg">
-                        <span class="text-2xl font-black group-hover:scale-110 transition-transform">S20</span>
-                        <span class="text-xs font-semibold text-indigo-400/80 mt-1">+1 Point</span>
+                    <button onclick="addDart('S20')" class="flex flex-col items-center justify-center p-4 bg-purple-950/40 border border-purple-500/30 hover:bg-purple-900/50 rounded-xl transition group">
+                        <span class="text-2xl font-black text-purple-400 group-hover:scale-110 transition">S20</span>
+                        <span class="text-xs text-purple-300/70 font-medium mt-1">+1 Point</span>
                     </button>
 
-                    <!-- Manqué / Hors 20 -->
-                    <button onclick="registerDart('MISS', 0)" class="btn-hit p-4 rounded-xl bg-gradient-to-br from-rose-500/10 to-rose-600/20 border-2 border-rose-500/40 hover:border-rose-400 text-rose-400 flex flex-col items-center justify-center group shadow-lg">
-                        <span class="text-2xl font-black group-hover:scale-110 transition-transform">MISS</span>
-                        <span class="text-xs font-semibold text-rose-400/80 mt-1">0 Point</span>
+                    <button onclick="addDart('MISS')" class="flex flex-col items-center justify-center p-4 bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/50 rounded-xl transition group">
+                        <span class="text-2xl font-black text-rose-400 group-hover:scale-110 transition">MISS</span>
+                        <span class="text-xs text-rose-300/70 font-medium mt-1">0 Point</span>
                     </button>
                 </div>
 
-                <!-- Interactive Sector Diagram representation for 20 -->
-                <div class="bg-slate-950 rounded-xl p-4 border border-slate-800/80 flex flex-col items-center justify-center">
-                    <span class="text-xs text-slate-400 mb-2">Cible interactive : Cliquez sur la zone touchée</span>
-                    <svg viewBox="0 0 300 180" class="w-full max-w-xs h-auto cursor-pointer drop-shadow-md">
-                        <!-- Background Outer Sector -->
-                        <path d="M 30,170 L 150,20 L 270,170 Z" fill="#1e293b" stroke="#334155" stroke-width="2" onclick="registerDart('MISS', 0)" />
-                        <text x="150" y="150" fill="#64748b" font-size="12" text-anchor="middle">HORS 20 (0pt)</text>
-
-                        <!-- Outer Single 20 -->
-                        <path d="M 60,170 L 150,45 L 240,170 Z" fill="#0f172a" stroke="#334155" stroke-width="2" onclick="registerDart('S20', 1)" class="hover:fill-indigo-900/50 transition"/>
-                        
-                        <!-- Double 20 Ring -->
-                        <path d="M 75,170 L 150,60 L 225,170 Z" fill="#0284c7" stroke="#0ea5e9" stroke-width="2" onclick="registerDart('D20', 2)" class="hover:opacity-80 transition"/>
-                        <text x="150" y="76" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">DOUBLE 20</text>
-
-                        <!-- Inner Single 20 -->
-                        <path d="M 90,170 L 150,80 L 210,170 Z" fill="#0f172a" stroke="#334155" stroke-width="1.5" onclick="registerDart('S20', 1)" class="hover:fill-indigo-900/50 transition"/>
-                        <text x="150" y="110" fill="#94a3b8" font-size="10" text-anchor="middle">SIMPLE 20</text>
-
-                        <!-- Triple 20 Bed -->
-                        <path d="M 110,170 L 150,110 L 190,170 Z" fill="#10b981" stroke="#34d399" stroke-width="2" onclick="registerDart('T20', 3)" class="hover:opacity-80 transition"/>
-                        <text x="150" y="142" fill="#ffffff" font-size="11" font-weight="900" text-anchor="middle">TRIPLE 20</text>
-                    </svg>
+                <!-- Segment 20 Visual Diagram -->
+                <div class="mt-6 border-t border-slate-800/80 pt-4 text-center">
+                    <p class="text-xs text-slate-400 mb-3">Cible interactive : Cliquez sur la zone touchée</p>
+                    
+                    <div class="relative w-64 h-48 mx-auto flex items-end justify-center pb-2">
+                        <!-- SVG Slice representing Segment 20 -->
+                        <svg viewBox="0 0 200 160" class="w-full h-full drop-shadow-md">
+                            <!-- Miss Outer -->
+                            <path d="M 10 10 L 190 10 L 100 150 Z" class="fill-slate-800 stroke-slate-700 hover:fill-slate-700 cursor-pointer transition" onclick="addDart('MISS')"/>
+                            <!-- Double 20 Ring -->
+                            <path d="M 25 25 L 175 25 L 160 40 L 40 40 Z" class="fill-blue-600/60 stroke-blue-400 hover:fill-blue-500 cursor-pointer transition" onclick="addDart('D20')"/>
+                            <!-- Outer Single 20 -->
+                            <path d="M 40 40 L 160 40 L 135 75 L 65 75 Z" class="fill-slate-900 stroke-slate-700 hover:fill-slate-800 cursor-pointer transition" onclick="addDart('S20')"/>
+                            <!-- Triple 20 Ring -->
+                            <path d="M 65 75 L 135 75 L 120 95 L 80 95 Z" class="fill-emerald-600/60 stroke-emerald-400 hover:fill-emerald-500 cursor-pointer transition" onclick="addDart('T20')"/>
+                            <!-- Inner Single 20 -->
+                            <path d="M 80 95 L 120 95 L 100 135 Z" class="fill-slate-900 stroke-slate-700 hover:fill-slate-800 cursor-pointer transition" onclick="addDart('S20')"/>
+                            
+                            <!-- Labels -->
+                            <text x="100" y="35" text-anchor="middle" class="fill-white text-[10px] font-bold pointer-events-none">DOUBLE 20</text>
+                            <text x="100" y="60" text-anchor="middle" class="fill-slate-300 text-[10px] font-bold pointer-events-none">SIMPLE 20</text>
+                            <text x="100" y="88" text-anchor="middle" class="fill-white text-[9px] font-bold pointer-events-none">TRIPLE 20</text>
+                        </svg>
+                    </div>
                 </div>
+
             </div>
 
         </div>
 
-        <!-- Right Column: Live Statistics, Charts & History (5 cols on large screens) -->
-        <div class="lg:col-span-5 flex flex-col space-y-4">
+        <!-- Column Right: Live Stats & History (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-6">
 
-            <!-- Stats Panel -->
-            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl">
-                <h2 class="text-sm uppercase tracking-wider font-bold text-slate-300 mb-4 flex items-center justify-between">
-                    <span><i class="fas fa-chart-line text-cyan-400 mr-2"></i>Statistiques en direct</span>
-                    <span id="accuracyBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">0% Précision</span>
-                </h2>
+            <!-- Detailed Stats Panel -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i data-lucide="line-chart" class="w-4 h-4 text-cyan-400"></i>
+                        Statistiques en Direct
+                    </h2>
+                    <span id="hit-rate" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">0% Précision</span>
+                </div>
 
                 <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <span class="text-[11px] text-slate-400 block font-medium">Moyenne / Fléchette</span>
-                        <span id="avgPerDart" class="text-2xl font-bold text-emerald-400 font-mono">0.00</span>
-                        <span class="text-[10px] text-slate-500 block">pts / fléchette</span>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <p class="text-[11px] text-slate-400">Moyenne / Fléchette</p>
+                        <p id="avg-dart" class="text-xl font-bold text-white mt-0.5">0.00</p>
+                        <p class="text-[10px] text-slate-500">pts / fléchette</p>
                     </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <span class="text-[11px] text-slate-400 block font-medium">Moyenne / Volée</span>
-                        <span id="avgPerTurn" class="text-2xl font-bold text-cyan-400 font-mono">0.00</span>
-                        <span class="text-[10px] text-slate-500 block">pts / 3 fléchettes</span>
+                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                        <p class="text-[11px] text-slate-400">Moyenne / Volée</p>
+                        <p id="avg-turn" class="text-xl font-bold text-white mt-0.5">0.00</p>
+                        <p class="text-[10px] text-slate-500">pts / 3 fléchettes</p>
                     </div>
                 </div>
 
-                <!-- Hit Breakdown Grid -->
+                <!-- Hit Distribution Matrix -->
                 <div class="grid grid-cols-4 gap-2 text-center text-xs">
-                    <div class="bg-slate-950/80 p-2 rounded-lg border border-emerald-500/30">
-                        <span class="text-emerald-400 font-bold block">T20</span>
-                        <span id="countT20" class="text-base font-bold text-slate-200 mt-0.5 block">0</span>
-                        <span id="pctT20" class="text-[10px] text-slate-500">0%</span>
+                    <div class="p-2 bg-emerald-950/20 border border-emerald-500/20 rounded-lg">
+                        <p class="font-bold text-emerald-400">T20</p>
+                        <p id="count-t20" class="text-base font-extrabold text-white my-0.5">0</p>
+                        <p id="pct-t20" class="text-[10px] text-slate-400">0%</p>
                     </div>
-                    <div class="bg-slate-950/80 p-2 rounded-lg border border-cyan-500/30">
-                        <span class="text-cyan-400 font-bold block">D20</span>
-                        <span id="countD20" class="text-base font-bold text-slate-200 mt-0.5 block">0</span>
-                        <span id="pctD20" class="text-[10px] text-slate-500">0%</span>
+                    <div class="p-2 bg-blue-950/20 border border-blue-500/20 rounded-lg">
+                        <p class="font-bold text-blue-400">D20</p>
+                        <p id="count-d20" class="text-base font-extrabold text-white my-0.5">0</p>
+                        <p id="pct-d20" class="text-[10px] text-slate-400">0%</p>
                     </div>
-                    <div class="bg-slate-950/80 p-2 rounded-lg border border-indigo-500/30">
-                        <span class="text-indigo-400 font-bold block">S20</span>
-                        <span id="countS20" class="text-base font-bold text-slate-200 mt-0.5 block">0</span>
-                        <span id="pctS20" class="text-[10px] text-slate-500">0%</span>
+                    <div class="p-2 bg-purple-950/20 border border-purple-500/20 rounded-lg">
+                        <p class="font-bold text-purple-400">S20</p>
+                        <p id="count-s20" class="text-base font-extrabold text-white my-0.5">0</p>
+                        <p id="pct-s20" class="text-[10px] text-slate-400">0%</p>
                     </div>
-                    <div class="bg-slate-950/80 p-2 rounded-lg border border-rose-500/30">
-                        <span class="text-rose-400 font-bold block">Miss</span>
-                        <span id="countMiss" class="text-base font-bold text-slate-200 mt-0.5 block">0</span>
-                        <span id="pctMiss" class="text-[10px] text-slate-500">0%</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- History Log -->
-            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 sm:p-5 shadow-xl flex-grow flex flex-col min-h-[220px]">
-                <h2 class="text-sm uppercase tracking-wider font-bold text-slate-300 mb-3 flex items-center justify-between">
-                    <span><i class="fas fa-history text-indigo-400 mr-2"></i>Historique des volées</span>
-                    <span id="turnsCountText" class="text-xs text-slate-500">0 / 33 volées</span>
-                </h2>
-
-                <div id="historyList" class="flex-grow overflow-y-auto max-h-48 space-y-2 pr-1">
-                    <div class="text-center py-8 text-slate-500 text-xs italic">
-                        Aucune fléchette lancée pour l'instant.
+                    <div class="p-2 bg-rose-950/20 border border-rose-500/20 rounded-lg">
+                        <p class="font-bold text-rose-400">Miss</p>
+                        <p id="count-miss" class="text-base font-extrabold text-white my-0.5">0</p>
+                        <p id="pct-miss" class="text-[10px] text-slate-400">0%</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Real-time Score Progression Chart -->
-            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 p-4 shadow-xl">
-                <h2 class="text-xs uppercase tracking-wider font-bold text-slate-400 mb-2">Évolution du score</h2>
+            <!-- Turns History Log -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col flex-grow">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                        <i data-lucide="history" class="w-4 h-4 text-cyan-400"></i>
+                        Historique des Volées
+                    </h2>
+                    <span id="turns-count" class="text-xs text-slate-500">0 / 33 volées</span>
+                </div>
+
+                <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs grow">
+                    <div class="text-center text-slate-500 py-8 italic">Aucune fléchette lancée pour l'instant.</div>
+                </div>
+            </div>
+
+            <!-- Score Evolution Graph -->
+            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                <p class="text-xs font-semibold text-slate-400 uppercase mb-2">Évolution du Score</p>
                 <div class="h-28 w-full">
                     <canvas id="scoreChart"></canvas>
                 </div>
             </div>
 
         </div>
+
     </main>
 
-    <!-- Modal: Autodarts WebSocket Settings -->
-    <div id="wsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl relative">
-            <button onclick="closeWsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fas fa-times text-lg"></i>
+    <!-- Leaderboard Modal -->
+    <div id="leaderboard-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeLeaderboard()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                <i class="fas fa-network-wired text-emerald-400"></i> Connexion Autodarts WS
-            </h3>
+            <div class="flex items-center space-x-3 mb-4">
+                <i data-lucide="trophy" class="w-6 h-6 text-amber-400"></i>
+                <h3 class="text-lg font-bold text-white">Meilleurs Scores Personnels</h3>
+            </div>
+            <div id="leaderboard-content" class="space-y-2 max-h-60 overflow-y-auto pr-1 text-xs">
+                <!-- Dynamically Populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- WebSocket Config Modal -->
+    <div id="ws-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button onclick="closeWsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="flex items-center space-x-3 mb-3">
+                <i data-lucide="network" class="w-6 h-6 text-cyan-400"></i>
+                <h3 class="text-lg font-bold text-white">Connexion Autodarts WS</h3>
+            </div>
+            
             <p class="text-xs text-slate-400 mb-4">
                 Connectez votre instance Autodarts (Board Manager ou WebSocket local/distant) pour recevoir automatiquement les impacts de fléchettes.
             </p>
 
-            <div class="space-y-4">
+            <!-- Pre-configured Quick Connect Buttons -->
+            <div class="mb-4 space-y-2">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase">Raccourcis de connexion :</p>
+                <div class="grid grid-cols-1 gap-2">
+                    <button onclick="setWsUrl('ws://192.168.1.13:3181')" class="text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono text-cyan-300 flex justify-between items-center">
+                        <span>Board Manager IP (3181)</span>
+                        <span class="text-[10px] text-slate-400">ws://192.168.1.13:3181</span>
+                    </button>
+                    <button onclick="setWsUrl('ws://localhost:3181')" class="text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono text-cyan-300 flex justify-between items-center">
+                        <span>Board Manager Local (3181)</span>
+                        <span class="text-[10px] text-slate-400">ws://localhost:3181</span>
+                    </button>
+                    <button onclick="setWsUrl('ws://localhost:8080')" class="text-left px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-mono text-cyan-300 flex justify-between items-center">
+                        <span>Autodarts Play / Relais (8080)</span>
+                        <span class="text-[10px] text-slate-400">ws://localhost:8080</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">URL WebSocket Autodarts</label>
-                    <input type="text" id="wsUrlInput" value="ws://localhost:8080" placeholder="ws://localhost:8080" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 font-mono">
+                    <label class="block text-xs font-medium text-slate-400 mb-1">URL WebSocket Autodarts</label>
+                    <input type="text" id="ws-url-input" value="ws://192.168.1.13:3181" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm text-white font-mono focus:outline-none focus:border-cyan-500">
                 </div>
 
-                <div class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800">
-                    <div>
-                        <span class="text-xs font-semibold text-slate-200 block">Mode Simulation WS</span>
-                        <span class="text-[10px] text-slate-400 block">Génère des tirs virtuels pour tester</span>
-                    </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="simModeToggle" onchange="toggleSimMode()" class="sr-only peer">
-                        <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
+                <div class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg">
+                    <span class="text-xs font-medium text-slate-300">Mode Simulation WS</span>
+                    <input type="checkbox" id="sim-mode" onchange="toggleSimMode(this)" class="w-4 h-4 accent-cyan-500 cursor-pointer">
                 </div>
 
-                <div class="flex space-x-3 pt-2">
-                    <button onclick="connectWebSocket()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition">
+                <div class="flex space-x-2 pt-2">
+                    <button onclick="connectWs()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm rounded-lg transition">
                         Se Connecter
                     </button>
-                    <button onclick="disconnectWebSocket()" class="px-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2.5 rounded-xl text-xs transition">
+                    <button onclick="disconnectWs()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-lg transition">
                         Déconnecter
                     </button>
                 </div>
@@ -364,307 +329,34 @@
         </div>
     </div>
 
-    <!-- Modal: Leaderboard -->
-    <div id="leaderboardModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-lg w-full shadow-2xl relative">
-            <button onclick="closeLeaderboard()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i class="fas fa-times text-lg"></i>
-            </button>
-            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-trophy text-amber-400"></i> Meilleurs Scores (Local)
-            </h3>
-
-            <div id="leaderboardContent" class="space-y-2 max-h-80 overflow-y-auto mb-4">
-                <!-- Dynamic Highscores -->
-            </div>
-
-            <div class="flex justify-between items-center border-t border-slate-800 pt-4">
-                <button onclick="clearLeaderboard()" class="text-xs text-rose-400 hover:underline">Effacer l'historique</button>
-                <button onclick="closeLeaderboard()" class="px-4 py-2 bg-slate-800 text-slate-200 rounded-xl text-xs font-semibold hover:bg-slate-700">Fermer</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Game Over / End Summary -->
-    <div id="gameOverModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-lg w-full shadow-2xl text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-500"></div>
-            
-            <div class="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-emerald-500/20">
-                <i class="fas fa-flag-checkered"></i>
-            </div>
-
-            <h2 class="text-2xl font-black text-white tracking-tight">Partie Terminée !</h2>
-            <p class="text-xs text-slate-400 mt-1">Les 99 fléchettes ont été tirées.</p>
-
-            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 my-6">
-                <span class="text-xs uppercase text-slate-400 font-semibold block">Score Final</span>
-                <span id="finalScoreDisplay" class="text-5xl font-black text-emerald-400 font-mono neon-text-green my-1 block">0</span>
-                <span id="finalScoreRating" class="text-xs text-cyan-400 font-semibold">Moyenne: 0.00 pts / fléchette</span>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 text-center text-xs mb-6">
-                <div class="bg-slate-800/50 p-2.5 rounded-xl">
-                    <span class="text-slate-400 block text-[10px]">T20</span>
-                    <span id="finalT20" class="text-lg font-bold text-emerald-400">0</span>
-                </div>
-                <div class="bg-slate-800/50 p-2.5 rounded-xl">
-                    <span class="text-slate-400 block text-[10px]">D20</span>
-                    <span id="finalD20" class="text-lg font-bold text-cyan-400">0</span>
-                </div>
-                <div class="bg-slate-800/50 p-2.5 rounded-xl">
-                    <span class="text-slate-400 block text-[10px]">S20</span>
-                    <span id="finalS20" class="text-lg font-bold text-indigo-400">0</span>
-                </div>
-            </div>
-
-            <!-- Save Highscore Input -->
-            <div class="mb-6 text-left">
-                <label class="block text-xs font-semibold text-slate-300 mb-1">Enregistrer votre pseudo :</label>
-                <input type="text" id="playerNameInput" placeholder="Ex: Player 1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500">
-            </div>
-
-            <div class="flex space-x-3">
-                <button onclick="saveAndRestart()" class="flex-1 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-slate-950 font-bold py-3 rounded-xl text-sm shadow-lg transition">
-                    Enregistrer & Rejouer
-                </button>
-            </div>
-        </div>
-    </div>
-
+    <!-- Application JavaScript Logic -->
     <script>
-        // Game Logic State
-        const MAX_DARTS = 99;
-        let dartsHistory = []; // Array of objects: { hit: 'T20', points: 3 }
-        let isAudioMuted = false;
-        let wsSocket = null;
+        // State Management
+        let darts = [];
+        let turns = [];
+        let currentTurnDarts = [];
+        let totalScore = 0;
+        let soundEnabled = true;
+        let ws = null;
         let simInterval = null;
-        let chartInstance = null;
+        let scoreChart = null;
 
-        // Sound Effects Generator using Web Audio API
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(type) {
-            if (isAudioMuted) return;
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                const now = audioCtx.currentTime;
-
-                if (type === 'hit') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                    osc.start(now);
-                    osc.stop(now + 0.08);
-                } else if (type === 't20') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, now); // C5
-                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                } else if (type === 'ton80') {
-                    // Celebration fan-fare sound
-                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-                        const o = audioCtx.createOscillator();
-                        const g = audioCtx.createGain();
-                        o.connect(g);
-                        g.connect(audioCtx.destination);
-                        o.frequency.setValueAtTime(freq, now + i * 0.08);
-                        g.gain.setValueAtTime(0.2, now + i * 0.08);
-                        g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.2);
-                        o.start(now + i * 0.08);
-                        o.stop(now + i * 0.08 + 0.2);
-                    });
-                } else if (type === 'miss') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(180, now);
-                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.12);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-                    osc.start(now);
-                    osc.stop(now + 0.12);
-                }
-            } catch (e) {
-                console.log('Audio playback error:', e);
-            }
-        }
-
-        function toggleAudio() {
-            isAudioMuted = !isAudioMuted;
-            const btn = document.getElementById('audioBtn');
-            btn.innerHTML = isAudioMuted 
-                ? '<i class="fas fa-volume-mute text-slate-500 text-sm"></i>' 
-                : '<i class="fas fa-volume-up text-emerald-400 text-sm"></i>';
-        }
-
-        // Main Function to register a dart impact
-        function registerDart(hitType, points) {
-            if (dartsHistory.length >= MAX_DARTS) return;
-
-            dartsHistory.push({ hit: hitType, points: points });
-
-            // Trigger audio based on hit
-            if (hitType === 'T20') {
-                playSound('t20');
-            } else if (hitType === 'MISS') {
-                playSound('miss');
-            } else {
-                playSound('hit');
-            }
-
-            // Check if user hit 3x T20 in current turn (TON 80 in 20s mode = 9 pts)
-            const currentTurnLength = dartsHistory.length % 3;
-            if (currentTurnLength === 0 && dartsHistory.length >= 3) {
-                const last3 = dartsHistory.slice(-3);
-                if (last3.every(d => d.hit === 'T20')) {
-                    playSound('ton80');
-                    triggerConfetti();
-                }
-            }
-
-            updateUI();
-
-            // Check Game Over
-            if (dartsHistory.length === MAX_DARTS) {
-                setTimeout(endGame, 400);
-            }
-        }
-
-        // Undo last dart
-        function undoLastDart() {
-            if (dartsHistory.length === 0) return;
-            dartsHistory.pop();
-            playSound('hit');
-            updateUI();
-        }
-
-        function updateUI() {
-            const totalDarts = dartsHistory.length;
-            const dartsLeft = MAX_DARTS - totalDarts;
-            const totalScore = dartsHistory.reduce((sum, d) => sum + d.points, 0);
-
-            document.getElementById('dartsLeft').innerText = dartsLeft;
-            document.getElementById('totalScore').innerText = totalScore;
-            document.getElementById('maxPossible').innerText = `Max théorique: ${totalScore + (dartsLeft * 3)}`;
-
-            // Current Turn calculation (3 darts per turn)
-            const currentTurnIndex = Math.floor(totalDarts / 3);
-            const dartsInCurrentTurn = totalDarts % 3;
-            document.getElementById('turnNumber').innerText = Math.min(currentTurnIndex + 1, 33);
-
-            // Turn score calculation
-            const currentTurnDarts = dartsHistory.slice(currentTurnIndex * 3, totalDarts);
-            const currentTurnScore = currentTurnDarts.reduce((sum, d) => sum + d.points, 0);
-            document.getElementById('currentTurnScore').innerText = currentTurnScore;
-
-            // Dart Slots Display
-            for (let i = 0; i < 3; i++) {
-                const slot = document.getElementById(`dart-slot-${i}`);
-                if (i < currentTurnDarts.length) {
-                    const dart = currentTurnDarts[i];
-                    slot.innerText = dart.hit;
-                    slot.className = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center font-black text-xs sm:text-sm shadow-md transition-all scale-105 ";
-                    
-                    if (dart.hit === 'T20') slot.className += "bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/60";
-                    else if (dart.hit === 'D20') slot.className += "bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500/60";
-                    else if (dart.hit === 'S20') slot.className += "bg-indigo-500/20 text-indigo-400 border-2 border-indigo-500/60";
-                    else slot.className += "bg-rose-500/20 text-rose-400 border-2 border-rose-500/60";
-                } else {
-                    slot.innerText = "-";
-                    slot.className = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-950 border-2 border-slate-800 flex items-center justify-center font-bold text-lg text-slate-600 shadow-inner";
-                }
-            }
-
-            // Statistics Computation
-            const countT20 = dartsHistory.filter(d => d.hit === 'T20').length;
-            const countD20 = dartsHistory.filter(d => d.hit === 'D20').length;
-            const countS20 = dartsHistory.filter(d => d.hit === 'S20').length;
-            const countMiss = dartsHistory.filter(d => d.hit === 'MISS').length;
-
-            const accuracy = totalDarts > 0 ? (((countT20 + countD20 + countS20) / totalDarts) * 100).toFixed(0) : 0;
-            const avgDart = totalDarts > 0 ? (totalScore / totalDarts).toFixed(2) : '0.00';
-            const avgTurn = (avgDart * 3).toFixed(2);
-
-            document.getElementById('avgPerDart').innerText = avgDart;
-            document.getElementById('avgPerTurn').innerText = avgTurn;
-            document.getElementById('accuracyBadge').innerText = `${accuracy}% Précision`;
-
-            document.getElementById('countT20').innerText = countT20;
-            document.getElementById('countD20').innerText = countD20;
-            document.getElementById('countS20').innerText = countS20;
-            document.getElementById('countMiss').innerText = countMiss;
-
-            document.getElementById('pctT20').innerText = totalDarts ? `${((countT20 / totalDarts) * 100).toFixed(0)}%` : '0%';
-            document.getElementById('pctD20').innerText = totalDarts ? `${((countD20 / totalDarts) * 100).toFixed(0)}%` : '0%';
-            document.getElementById('pctS20').innerText = totalDarts ? `${((countS20 / totalDarts) * 100).toFixed(0)}%` : '0%';
-            document.getElementById('pctMiss').innerText = totalDarts ? `${((countMiss / totalDarts) * 100).toFixed(0)}%` : '0%';
-
-            // History Log Render
-            renderHistory();
-
-            // Chart Render
-            updateChart();
-        }
-
-        function renderHistory() {
-            const container = document.getElementById('historyList');
-            const totalTurns = Math.ceil(dartsHistory.length / 3);
-            document.getElementById('turnsCountText').innerText = `${totalTurns} / 33 volées`;
-
-            if (dartsHistory.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-500 text-xs italic">Aucune fléchette lancée pour l'instant.</div>`;
-                return;
-            }
-
-            let html = '';
-            for (let i = totalTurns - 1; i >= 0; i--) {
-                const turnDarts = dartsHistory.slice(i * 3, (i + 1) * 3);
-                const turnScore = turnDarts.reduce((a, b) => a + b.points, 0);
-
-                html += `
-                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                        <div class="flex items-center space-x-3">
-                            <span class="font-bold text-slate-500 w-12">Volée ${i + 1}</span>
-                            <div class="flex space-x-1.5">
-                                ${turnDarts.map(d => `<span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] ${
-                                    d.hit === 'T20' ? 'bg-emerald-500/20 text-emerald-400' :
-                                    d.hit === 'D20' ? 'bg-cyan-500/20 text-cyan-400' :
-                                    d.hit === 'S20' ? 'bg-indigo-500/20 text-indigo-400' :
-                                    'bg-rose-500/20 text-rose-400'
-                                }">${d.hit}</span>`).join('')}
-                            </div>
-                        </div>
-                        <span class="font-black text-slate-200 font-mono text-sm">+${turnScore}</span>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-        }
-
+        // Init Chart.js
         function initChart() {
             const ctx = document.getElementById('scoreChart').getContext('2d');
-            chartInstance = new Chart(ctx, {
+            scoreChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: [],
+                    labels: [0],
                     datasets: [{
                         label: 'Score Cumulé',
-                        data: [],
-                        borderColor: '#00ff87',
-                        backgroundColor: 'rgba(0, 255, 135, 0.08)',
+                        data: [0],
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.3,
-                        pointRadius: 0
+                        pointRadius: 2
                     }]
                 },
                 options: {
@@ -674,235 +366,332 @@
                     scales: {
                         x: { display: false },
                         y: { 
-                            grid: { color: '#1e293b' },
-                            ticks: { color: '#64748b', font: { size: 9 } },
-                            suggestedMax: 100
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#64748b', font: { size: 10 } }
                         }
                     }
                 }
             });
         }
 
-        function updateChart() {
-            if (!chartInstance) return;
-            let runningTotal = 0;
-            const labels = [];
-            const data = [];
+        // Add Dart Shot
+        function addDart(type) {
+            if (darts.length >= 99) return;
 
-            dartsHistory.forEach((d, idx) => {
-                runningTotal += d.points;
-                labels.push(idx + 1);
-                data.push(runningTotal);
-            });
+            let points = 0;
+            if (type === 'T20') points = 3;
+            else if (type === 'D20') points = 2;
+            else if (type === 'S20') points = 1;
 
-            chartInstance.data.labels = labels;
-            chartInstance.data.datasets[0].data = data;
-            chartInstance.update();
-        }
+            darts.push({ type, points });
+            currentTurnDarts.push({ type, points });
+            totalScore += points;
 
-        // Keyboard Shortcuts Handler
-        window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return; // Ignore if typing in text inputs
+            playSound(type);
 
-            const key = e.key.toLowerCase();
-            if (key === 't' || key === '3') registerDart('T20', 3);
-            else if (key === 'd' || key === '2') registerDart('D20', 2);
-            else if (key === 's' || key === '1') registerDart('S20', 1);
-            else if (key === 'm' || key === '0' || key === ' ') registerDart('MISS', 0);
-            else if (key === 'z' || key === 'backspace') undoLastDart();
-        });
-
-        function openWsModal() {
-            document.getElementById('wsModal').classList.remove('hidden');
-        }
-        function closeWsModal() {
-            document.getElementById('wsModal').classList.add('hidden');
-        }
-
-        function connectWebSocket() {
-            const url = document.getElementById('wsUrlInput').value;
-            try {
-                wsSocket = new WebSocket(url);
-                
-                wsSocket.onopen = () => {
-                    updateWsIndicator(true, 'Autodarts Connecté');
-                    closeWsModal();
-                };
-
-                wsSocket.onmessage = (event) => {
-                    // Autodarts standard board event parsing example
-                    try {
-                        const data = JSON.parse(event.data);
-                        // Handles Autodarts hit payload structure
-                        if (data && data.segment) {
-                            const seg = data.segment; // e.g. "T20", "D20", "S20", "20", "1"
-                            if (seg === 'T20') registerDart('T20', 3);
-                            else if (seg === 'D20') registerDart('D20', 2);
-                            else if (seg === 'S20' || seg === '20') registerDart('S20', 1);
-                            else registerDart('MISS', 0);
-                        }
-                    } catch (err) {
-                        console.log('WS Message parsing error:', err);
-                    }
-                };
-
-                wsSocket.onerror = () => {
-                    updateWsIndicator(false, 'Erreur de connexion WS');
-                };
-
-                wsSocket.onclose = () => {
-                    updateWsIndicator(false, 'WS Déconnecté');
-                };
-
-            } catch (e) {
-                alert('URL WebSocket invalide.');
+            if (currentTurnDarts.length === 3 || darts.length === 99) {
+                turns.push([...currentTurnDarts]);
+                currentTurnDarts = [];
             }
+
+            updateUI();
         }
 
-        function disconnectWebSocket() {
-            if (wsSocket) wsSocket.close();
-            if (simInterval) clearInterval(simInterval);
-            document.getElementById('simModeToggle').checked = false;
-            updateWsIndicator(false, 'Manuel / WS Déconnecté');
-            closeWsModal();
-        }
+        function undoLastDart() {
+            if (darts.length === 0) return;
 
-        function toggleSimMode() {
-            const isSim = document.getElementById('simModeToggle').checked;
-            if (isSim) {
-                updateWsIndicator(true, 'Simulation Active');
-                simInterval = setInterval(() => {
-                    if (dartsHistory.length >= MAX_DARTS) {
-                        clearInterval(simInterval);
-                        return;
-                    }
-                    const rand = Math.random();
-                    if (rand < 0.35) registerDart('T20', 3);
-                    else if (rand < 0.55) registerDart('S20', 1);
-                    else if (rand < 0.70) registerDart('D20', 2);
-                    else registerDart('MISS', 0);
-                }, 1200);
-            } else {
-                if (simInterval) clearInterval(simInterval);
-                updateWsIndicator(false, 'Manuel / WS Déconnecté');
+            const last = darts.pop();
+            totalScore -= last.points;
+
+            if (currentTurnDarts.length > 0) {
+                currentTurnDarts.pop();
+            } else if (turns.length > 0) {
+                currentTurnDarts = turns.pop();
+                currentTurnDarts.pop();
             }
-        }
 
-        function updateWsIndicator(connected, text) {
-            const ind = document.getElementById('wsIndicator');
-            const txt = document.getElementById('wsText');
-            txt.innerText = text;
-            if (connected) {
-                ind.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse';
-            } else {
-                ind.className = 'w-2.5 h-2.5 rounded-full bg-amber-500';
-            }
-        }
-
-        // Confetti Effect
-        function triggerConfetti() {
-            if (typeof confetti === 'function') {
-                confetti({
-                    particleCount: 80,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
-        }
-
-        // Game Over Management
-        function endGame() {
-            const totalScore = dartsHistory.reduce((s, d) => s + d.points, 0);
-            const avg = (totalScore / MAX_DARTS).toFixed(2);
-
-            document.getElementById('finalScoreDisplay').innerText = totalScore;
-            document.getElementById('finalScoreRating').innerText = `Moyenne : ${avg} pts/fléchette (${(totalScore/33).toFixed(2)} pts/volée)`;
-
-            document.getElementById('finalT20').innerText = dartsHistory.filter(d => d.hit === 'T20').length;
-            document.getElementById('finalD20').innerText = dartsHistory.filter(d => d.hit === 'D20').length;
-            document.getElementById('finalS20').innerText = dartsHistory.filter(d => d.hit === 'S20').length;
-
-            document.getElementById('gameOverModal').classList.remove('hidden');
-            triggerConfetti();
-        }
-
-        function saveAndRestart() {
-            const playerName = document.getElementById('playerNameInput').value.trim() || 'Joueur Inconnu';
-            const totalScore = dartsHistory.reduce((s, d) => s + d.points, 0);
-            const avg = (totalScore / MAX_DARTS).toFixed(2);
-
-            const record = {
-                name: playerName,
-                score: totalScore,
-                avg: avg,
-                date: new Date().toLocaleDateString('fr-FR')
-            };
-
-            const leaderboard = JSON.parse(localStorage.getItem('autodarts_99_scores') || '[]');
-            leaderboard.push(record);
-            leaderboard.sort((a, b) => b.score - a.score);
-            localStorage.setItem('autodarts_99_scores', JSON.stringify(leaderboard.slice(0, 10)));
-
-            document.getElementById('gameOverModal').classList.add('hidden');
-            resetGame();
+            updateUI();
         }
 
         function resetGame() {
-            dartsHistory = [];
+            if (darts.length > 0 && !confirm("Voulez-vous réinitialiser la partie actuelle ?")) return;
+            darts = [];
+            turns = [];
+            currentTurnDarts = [];
+            totalScore = 0;
             updateUI();
         }
 
-        function confirmReset() {
-            if (dartsHistory.length > 0 && confirm("Voulez-vous vraiment recommencer la partie ?")) {
-                resetGame();
+        function updateUI() {
+            const dartsLeft = 99 - darts.length;
+            document.getElementById('darts-left').innerText = dartsLeft;
+            document.getElementById('total-score').innerText = totalScore;
+
+            const currentTurnScore = currentTurnDarts.reduce((acc, d) => acc + d.points, 0);
+            document.getElementById('current-turn-score').innerText = currentTurnScore;
+
+            // Slots
+            for (let i = 1; i <= 3; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                if (currentTurnDarts[i - 1]) {
+                    slot.innerText = currentTurnDarts[i - 1].type;
+                    slot.className = "w-10 h-10 border rounded-lg flex items-center justify-center font-bold text-xs " + getBadgeStyle(currentTurnDarts[i - 1].type);
+                } else {
+                    slot.innerText = "-";
+                    slot.className = "w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400";
+                }
+            }
+
+            // Stats
+            const countT20 = darts.filter(d => d.type === 'T20').length;
+            const countD20 = darts.filter(d => d.type === 'D20').length;
+            const countS20 = darts.filter(d => d.type === 'S20').length;
+            const countMiss = darts.filter(d => d.type === 'MISS').length;
+            const total = darts.length || 1;
+
+            document.getElementById('count-t20').innerText = countT20;
+            document.getElementById('count-d20').innerText = countD20;
+            document.getElementById('count-s20').innerText = countS20;
+            document.getElementById('count-miss').innerText = countMiss;
+
+            document.getElementById('pct-t20').innerText = Math.round((countT20 / total) * 100) + '%';
+            document.getElementById('pct-d20').innerText = Math.round((countD20 / total) * 100) + '%';
+            document.getElementById('pct-s20').innerText = Math.round((countS20 / total) * 100) + '%';
+            document.getElementById('pct-miss').innerText = Math.round((countMiss / total) * 100) + '%';
+
+            const hitCount = countT20 + countD20 + countS20;
+            const hitRate = darts.length ? Math.round((hitCount / darts.length) * 100) : 0;
+            document.getElementById('hit-rate').innerText = `${hitRate}% Précision`;
+
+            const avgDart = darts.length ? (totalScore / darts.length).toFixed(2) : '0.00';
+            const avgTurn = turns.length ? (totalScore / turns.length).toFixed(2) : '0.00';
+            document.getElementById('avg-dart').innerText = avgDart;
+            document.getElementById('avg-turn').innerText = avgTurn;
+
+            // History Log
+            const historyList = document.getElementById('history-list');
+            document.getElementById('turns-count').innerText = `${turns.length} / 33 volées`;
+
+            if (turns.length === 0 && currentTurnDarts.length === 0) {
+                historyList.innerHTML = `<div class="text-center text-slate-500 py-8 italic">Aucune fléchette lancée pour l'instant.</div>`;
+            } else {
+                let html = '';
+                turns.forEach((t, index) => {
+                    const turnPts = t.reduce((a, b) => a + b.points, 0);
+                    html = `
+                        <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                            <span class="font-bold text-slate-400">Volée #${index + 1}</span>
+                            <div class="flex space-x-1">
+                                ${t.map(d => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${getBadgeStyle(d.type)}">${d.type}</span>`).join('')}
+                            </div>
+                            <span class="font-bold text-emerald-400">+${turnPts} pts</span>
+                        </div>
+                    ` + html;
+                });
+                historyList.innerHTML = html;
+            }
+
+            // Update Chart
+            if (scoreChart) {
+                let cumulative = 0;
+                const chartData = [0];
+                const labels = [0];
+                turns.forEach((t, i) => {
+                    cumulative += t.reduce((a, b) => a + b.points, 0);
+                    chartData.push(cumulative);
+                    labels.push(i + 1);
+                });
+                scoreChart.data.labels = labels;
+                scoreChart.data.datasets[0].data = chartData;
+                scoreChart.update();
+            }
+
+            if (darts.length === 99) {
+                setTimeout(endGame, 300);
             }
         }
 
-        // Leaderboard Management
-        function openLeaderboard() {
-            const leaderboard = JSON.parse(localStorage.getItem('autodarts_99_scores') || '[]');
-            const container = document.getElementById('leaderboardContent');
+        function getBadgeStyle(type) {
+            if (type === 'T20') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+            if (type === 'D20') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+            if (type === 'S20') return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
+            return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
+        }
 
-            if (leaderboard.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-500 py-6 text-xs">Aucun score enregistré pour l'instant.</p>`;
+        function endGame() {
+            saveScore(totalScore);
+            alert(`Partie terminée !\nScore Final : ${totalScore} / 297 pts\nMoyenne / Fléchette : ${(totalScore / 99).toFixed(2)}`);
+            openLeaderboard();
+        }
+
+        // Leaderboard LocalStorage
+        function saveScore(score) {
+            let scores = JSON.parse(localStorage.getItem('darts_99_scores') || '[]');
+            scores.push({
+                score,
+                date: new Date().toLocaleDateString('fr-FR'),
+                avg: (score / 99).toFixed(2)
+            });
+            scores.sort((a, b) => b.score - a.score);
+            scores = scores.slice(0, 5);
+            localStorage.setItem('darts_99_scores', JSON.stringify(scores));
+        }
+
+        function openLeaderboard() {
+            const list = document.getElementById('leaderboard-content');
+            let scores = JSON.parse(localStorage.getItem('darts_99_scores') || '[]');
+            
+            if (scores.length === 0) {
+                list.innerHTML = `<p class="text-center text-slate-500 py-4">Aucun score enregistré.</p>`;
             } else {
-                container.innerHTML = leaderboard.map((item, index) => `
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                list.innerHTML = scores.map((s, i) => `
+                    <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                         <div class="flex items-center space-x-3">
-                            <span class="w-6 h-6 rounded-full ${
-                                index === 0 ? 'bg-amber-500 text-slate-950' :
-                                index === 1 ? 'bg-slate-300 text-slate-950' :
-                                index === 2 ? 'bg-amber-700 text-white' : 'bg-slate-800 text-slate-400'
-                            } font-extrabold flex items-center justify-center text-[10px]">${index + 1}</span>
-                            <div>
-                                <span class="font-bold text-slate-200 block">${item.name}</span>
-                                <span class="text-[10px] text-slate-500">${item.date} • Moy: ${item.avg}</span>
-                            </div>
+                            <span class="font-bold text-amber-400">#${i + 1}</span>
+                            <span class="text-slate-300">${s.date}</span>
                         </div>
-                        <span class="text-lg font-black text-emerald-400 font-mono">${item.score} pts</span>
+                        <div class="text-right">
+                            <span class="text-sm font-bold text-emerald-400">${s.score} pts</span>
+                            <span class="text-[10px] text-slate-500 block">${s.avg} / fléchette</span>
+                        </div>
                     </div>
                 `).join('');
             }
-
-            document.getElementById('leaderboardModal').classList.remove('hidden');
+            document.getElementById('leaderboard-modal').classList.remove('hidden');
+            document.getElementById('leaderboard-modal').classList.add('flex');
         }
 
         function closeLeaderboard() {
-            document.getElementById('leaderboardModal').classList.add('hidden');
+            document.getElementById('leaderboard-modal').classList.add('hidden');
+            document.getElementById('leaderboard-modal').classList.remove('flex');
         }
 
-        function clearLeaderboard() {
-            if (confirm("Effacer tout l'historique des meilleurs scores ?")) {
-                localStorage.removeItem('autodarts_99_scores');
-                openLeaderboard();
+        // Sound Effects (Web Audio API synthesis)
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                if (type === 'T20') {
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+                } else if (type === 'D20') {
+                    osc.frequency.setValueAtTime(600, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
+                } else if (type === 'S20') {
+                    osc.frequency.setValueAtTime(400, ctx.currentTime);
+                } else {
+                    osc.frequency.setValueAtTime(150, ctx.currentTime);
+                }
+
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch (e) {}
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-btn').className = soundEnabled 
+                ? "p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition text-slate-300"
+                : "p-2 bg-rose-950/40 border border-rose-500/30 text-rose-400 rounded-lg transition";
+        }
+
+        // WebSocket Integration
+        function openWsModal() {
+            document.getElementById('ws-modal').classList.remove('hidden');
+            document.getElementById('ws-modal').classList.add('flex');
+        }
+
+        function closeWsModal() {
+            document.getElementById('ws-modal').classList.add('hidden');
+            document.getElementById('ws-modal').classList.remove('flex');
+        }
+
+        function setWsUrl(url) {
+            document.getElementById('ws-url-input').value = url;
+        }
+
+        function connectWs() {
+            const url = document.getElementById('ws-url-input').value;
+            disconnectWs();
+
+            try {
+                ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50";
+                    document.getElementById('ws-text').innerText = "WS Connecté";
+                    closeWsModal();
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        // Parse Autodarts throw payload
+                        if (data && (data.event === 'throw' || data.type === 'dart')) {
+                            const segment = data.segment || data.val || '';
+                            if (segment === 'T20' || segment === '20T') addDart('T20');
+                            else if (segment === 'D20' || segment === '20D') addDart('D20');
+                            else if (segment === 'S20' || segment === '20S' || segment === '20') addDart('S20');
+                            else addDart('MISS');
+                        }
+                    } catch (e) {}
+                };
+
+                ws.onerror = () => {
+                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-rose-500";
+                    document.getElementById('ws-text').innerText = "Erreur WS";
+                };
+
+                ws.onclose = () => {
+                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
+                    document.getElementById('ws-text').innerText = "WS Déconnecté";
+                };
+            } catch (e) {
+                alert("Erreur de connexion WebSocket");
             }
         }
 
-        // Initialize App on window load
-        window.onload = function() {
-            initChart();
-            updateUI();
-        };
+        function disconnectWs() {
+            if (ws) ws.close();
+            if (simInterval) clearInterval(simInterval);
+        }
+
+        function toggleSimMode(checkbox) {
+            if (checkbox.checked) {
+                simInterval = setInterval(() => {
+                    const rand = Math.random();
+                    if (rand < 0.3) addDart('T20');
+                    else if (rand < 0.5) addDart('D20');
+                    else if (rand < 0.8) addDart('S20');
+                    else addDart('MISS');
+                }, 1500);
+            } else {
+                if (simInterval) clearInterval(simInterval);
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            const key = e.key.toUpperCase();
+            if (key === 'T') addDart('T20');
+            if (key === 'D') addDart('D20');
+            if (key === 'S') addDart('S20');
+            if (key === 'M' || key === '0') addDart('MISS');
+            if (key === 'Z') undoLastDart();
+        });
+
+        // Initialize Icons & Chart
+        lucide.createIcons();
+        initChart();
     </script>
 </body>
 </html>
