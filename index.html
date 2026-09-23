@@ -49,7 +49,7 @@
             </div>
 
             <div class="flex items-center space-x-3">
-                <!-- Status WebSocket / Cloud -->
+                <!-- Status WebSocket -->
                 <button id="ws-status-btn" onclick="openWsModal()" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
                     <span id="ws-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
                     <span id="ws-text" class="text-slate-300">Déconnecté</span>
@@ -74,7 +74,7 @@
     <!-- Main Content Grid -->
     <main class="max-w-7xl mx-auto px-4 py-6 w-full grow grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- Column Left: Game Controls & Visual Target (7 cols) -->
+        <!-- Column Left: Game Controls & Visual Target -->
         <div class="lg:col-span-7 flex flex-col space-y-6">
 
             <!-- Principal Stats Banner -->
@@ -146,29 +146,10 @@
                         <span class="text-xs text-rose-300/70 font-medium mt-1">0 Point</span>
                     </button>
                 </div>
-
-                <!-- Segment 20 Visual Diagram -->
-                <div class="mt-6 border-t border-slate-800/80 pt-4 text-center">
-                    <p class="text-xs text-slate-400 mb-3">Cible interactive : Cliquez sur la zone touchée</p>
-                    
-                    <div class="relative w-64 h-48 mx-auto flex items-end justify-center pb-2">
-                        <svg viewBox="0 0 200 160" class="w-full h-full drop-shadow-md">
-                            <path d="M 10 10 L 190 10 L 100 150 Z" class="fill-slate-800 stroke-slate-700 hover:fill-slate-700 cursor-pointer transition" onclick="addDart('MISS')"/>
-                            <path d="M 25 25 L 175 25 L 160 40 L 40 40 Z" class="fill-blue-600/60 stroke-blue-400 hover:fill-blue-500 cursor-pointer transition" onclick="addDart('D20')"/>
-                            <path d="M 40 40 L 160 40 L 135 75 L 65 75 Z" class="fill-slate-900 stroke-slate-700 hover:fill-slate-800 cursor-pointer transition" onclick="addDart('S20')"/>
-                            <path d="M 65 75 L 135 75 L 120 95 L 80 95 Z" class="fill-emerald-600/60 stroke-emerald-400 hover:fill-emerald-500 cursor-pointer transition" onclick="addDart('T20')"/>
-                            <path d="M 80 95 L 120 95 L 100 135 Z" class="fill-slate-900 stroke-slate-700 hover:fill-slate-800 cursor-pointer transition" onclick="addDart('S20')"/>
-                            
-                            <text x="100" y="35" text-anchor="middle" class="fill-white text-[10px] font-bold pointer-events-none">DOUBLE 20</text>
-                            <text x="100" y="60" text-anchor="middle" class="fill-slate-300 text-[10px] font-bold pointer-events-none">SIMPLE 20</text>
-                            <text x="100" y="88" text-anchor="middle" class="fill-white text-[9px] font-bold pointer-events-none">TRIPLE 20</text>
-                        </svg>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Column Right: Live Stats & History (5 cols) -->
+        <!-- Column Right: Live Stats & History -->
         <div class="lg:col-span-5 flex flex-col space-y-6">
 
             <!-- Detailed Stats Panel -->
@@ -185,12 +166,10 @@
                     <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
                         <p class="text-[11px] text-slate-400">Moyenne / Fléchette</p>
                         <p id="avg-dart" class="text-xl font-bold text-white mt-0.5">0.00</p>
-                        <p class="text-[10px] text-slate-500">pts / fléchette</p>
                     </div>
                     <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
                         <p class="text-[11px] text-slate-400">Moyenne / Volée</p>
                         <p id="avg-turn" class="text-xl font-bold text-white mt-0.5">0.00</p>
-                        <p class="text-[10px] text-slate-500">pts / 3 fléchettes</p>
                     </div>
                 </div>
 
@@ -258,7 +237,7 @@
         </div>
     </div>
 
-    <!-- WebSocket / Cloud Config Modal -->
+    <!-- WebSocket Config Modal -->
     <div id="ws-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
             <button onclick="closeWsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -271,25 +250,17 @@
             </div>
             
             <p class="text-xs text-slate-400 mb-4">
-                Connecte ton Board ID Autodarts pour jouer en direct en HTTPS, ou utilise le mode simulation.
+                Connecte-toi à ton Board Manager local ou active la simulation.
             </p>
 
             <div class="space-y-4">
-                <!-- Direct Cloud Connection -->
                 <div>
-                    <label class="block text-xs font-medium text-cyan-400 mb-1">Board ID / Match ID Autodarts (Cloud WSS)</label>
-                    <input type="text" id="board-id-input" placeholder="ex: 8f3c71a2-..." class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-white font-mono focus:outline-none focus:border-cyan-500">
-                    <span class="text-[10px] text-slate-500 mt-1 block">Trouve ton Board ID dans les paramètres sur play.autodarts.io</span>
-                </div>
-
-                <!-- Fallback Direct WS URL -->
-                <div class="border-t border-slate-800 pt-3">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Ou URL WebSocket Directe (Local)</label>
-                    <input type="text" id="ws-url-input" value="ws://localhost:8080" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 font-mono focus:outline-none focus:border-cyan-500">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">URL WebSocket Autodarts Local</label>
+                    <input type="text" id="ws-url-input" value="ws://localhost:3180/ws" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-cyan-400 font-mono focus:outline-none focus:border-cyan-500">
                 </div>
 
                 <div class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg">
-                    <span class="text-xs font-medium text-slate-300">Mode Simulation WS</span>
+                    <span class="text-xs font-medium text-slate-300">Mode Simulation (Test)</span>
                     <input type="checkbox" id="sim-mode" onchange="toggleSimMode(this)" class="w-4 h-4 accent-cyan-500 cursor-pointer">
                 </div>
 
@@ -489,7 +460,7 @@
 
         function endGame() {
             saveScore(totalScore);
-            alert(`Partie terminée !\nScore Final : ${totalScore} / 297 pts\nMoyenne / Fléchette : ${(totalScore / 99).toFixed(2)}`);
+            alert(`Partie terminée !\nScore Final : ${totalScore} / 297 pts`);
             openLeaderboard();
         }
 
@@ -581,29 +552,23 @@
         }
 
         function connectAutodarts() {
-            const boardId = document.getElementById('board-id-input').value.trim();
-            const fallbackUrl = document.getElementById('ws-url-input').value.trim();
-
+            const targetUrl = document.getElementById('ws-url-input').value.trim();
             disconnectWs();
-
-            let targetUrl = fallbackUrl;
-            if (boardId) {
-                targetUrl = `wss://api.autodarts.io/ms/v1/boards/${boardId}/events`;
-            }
 
             try {
                 ws = new WebSocket(targetUrl);
 
                 ws.onopen = () => {
                     document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50";
-                    document.getElementById('ws-text').innerText = boardId ? "Cloud Connecté" : "WS Connecté";
+                    document.getElementById('ws-text').innerText = "Connecté";
                     closeWsModal();
                 };
 
                 ws.onmessage = (event) => {
                     try {
                         const data = JSON.parse(event.data);
-                        const seg = data.segment || data.item || data.val || '';
+                        const seg = data.segment || data.item || (data.event && data.event.segment) || '';
+                        
                         if (seg === 'T20' || seg === '20T') addDart('T20');
                         else if (seg === 'D20' || seg === '20D') addDart('D20');
                         else if (seg === 'S20' || seg === '20S' || seg === '20') addDart('S20');
@@ -632,6 +597,9 @@
 
         function toggleSimMode(checkbox) {
             if (checkbox.checked) {
+                closeWsModal();
+                document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse";
+                document.getElementById('ws-text').innerText = "Simulation";
                 simInterval = setInterval(() => {
                     const rand = Math.random();
                     if (rand < 0.3) addDart('T20');
@@ -641,8 +609,20 @@
                 }, 1500);
             } else {
                 if (simInterval) clearInterval(simInterval);
+                document.getElementById('ws-text').innerText = "Déconnecté";
             }
         }
+
+        // Écouteur pour le script Tampermonkey
+        window.addEventListener("message", (event) => {
+            if (event.data && event.data.type === "AUTODARTS_THROW") {
+                const val = event.data.value;
+                if (val === 'T20' || val === '20T') addDart('T20');
+                else if (val === 'D20' || val === '20D') addDart('D20');
+                else if (val === 'S20' || val === '20S' || val === '20') addDart('S20');
+                else if (val) addDart('MISS');
+            }
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
