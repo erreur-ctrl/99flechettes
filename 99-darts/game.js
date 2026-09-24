@@ -78,17 +78,37 @@ function updateGameUI(){
 }
 function formatThrow(t){if(!t)return"—";return `${t.name} · +${t.points}`}
 function finishGame(){
-  state.running=false;const r={id:Date.now(),player:state.player,target:state.targetLabel,score:state.score,average:state.score/99,singles:state.singles,doubles:state.doubles,triples:state.triples,date:new Date().toISOString()};
-  state.history.unshift(r);state.history=state.history.slice(0,20);saveHistory(state.history);
-  $("finalScore").textContent=state.score;$("finishPlayer").textContent=state.player.toUpperCase();$("finalTarget").textContent="Cible : "+state.targetLabel;$("finalAverage").textContent=r.average.toFixed(2);$("finalSingles").textContent=state.singles;$("finalDoubles").textContent=state.doubles;$("finalTriples").textContent=state.triples;
-  const best=getPersonalBest(state.player,state.targetLabel);$("bestMessage").textContent=best&&best.id===r.id?"🔥 Nouveau meilleur résultat local pour cette cible !":"";
-  $("game").classList.add("hidden");$("finish").classList.remove("hidden");renderHistory();playFinishSound();
+  state.running=false;
+  const r={id:Date.now(),player:state.player,target:state.targetLabel,score:state.score,average:state.score/99,singles:state.singles,doubles:state.doubles,triples:state.triples,date:new Date().toISOString()};
+  state.history.unshift(r);
+  state.history=state.history.slice(0,100);
+  saveHistory(state.history);
+  $("finalScore").textContent=state.score;
+  $("finishPlayer").textContent=state.player.toUpperCase();
+  $("finalTarget").textContent="Cible : "+state.targetLabel;
+  $("finalAverage").textContent=r.average.toFixed(2);
+  $("finalSingles").textContent=state.singles;
+  $("finalDoubles").textContent=state.doubles;
+  $("finalTriples").textContent=state.triples;
+  const best=getPersonalBest(state.player,state.targetLabel);
+  $("bestMessage").textContent=best&&best.id===r.id?"🔥 Nouveau meilleur score personnel local pour cette cible !":"";
+  $("finish").classList.remove("hidden");
+  renderHistory();
+  playFinishSound();
 }
-function resetToSetup(){state.running=false;$("game").classList.add("hidden");$("finish").classList.add("hidden");$("setup").classList.remove("hidden");$("startBtn").disabled=!state.connected||state.target===null;$("shareMessage").textContent=""}
+function resetToSetup(){state.running=false;$("finish").classList.add("hidden");$("game").classList.add("hidden");$("setup").classList.remove("hidden");$("startBtn").disabled=!state.connected||state.target===null;$("shareMessage").textContent=""}
 function shareResult(){const text=`🎯 99 FLÉCHETTES\n${state.player} — cible ${state.targetLabel}\nScore : ${state.score} points\nMoyenne : ${(state.score/99).toFixed(2)} / fléchette\n99 fléchettes`;if(navigator.share){navigator.share({title:"99 Fléchettes",text,url:location.href}).catch(()=>{});return}if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>$("shareMessage").textContent="Résultat copié dans le presse-papiers !").catch(()=>fallbackCopy(text));else fallbackCopy(text)}
 function fallbackCopy(text){const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");$("shareMessage").textContent="Résultat copié !"}catch(_){$("shareMessage").textContent=text}ta.remove()}
-function loadHistory(){try{return JSON.parse(localStorage.getItem("99darts.history")||"[]")}catch(_){return[]}}function saveHistory(h){localStorage.setItem("99darts.history",JSON.stringify(h))}function getPersonalBest(player,target){return state.history.filter(x=>x.player===player&&x.target===target).sort((a,b)=>b.score-a.score)[0]||null}
-function renderHistory(){const b=$("history");if(!state.history.length){b.innerHTML='<div class="empty-history">Aucun résultat enregistré sur cet appareil.</div>';return}b.innerHTML=state.history.slice().sort((a,b)=>b.score-a.score).slice(0,10).map((x,i)=>`<div class="history-row"><b>${i===0?"🏆 ":""}${escapeHtml(x.player)}</b><span>Cible ${escapeHtml(x.target)}</span><span>${x.score} pts</span><span>${new Date(x.date).toLocaleDateString("fr-FR")}</span></div>`).join("")}
+function loadHistory(){try{return JSON.parse(localStorage.getItem("99darts.history")||"[]")}catch(_){return[]}}
+function saveHistory(h){localStorage.setItem("99darts.history",JSON.stringify(h))}
+function getPersonalBest(player,target){return state.history.filter(x=>x.player===player&&x.target===target).sort((a,b)=>b.score-a.score)[0]||null}
+function renderHistory(){
+  const b=$("history");
+  const target=state.targetLabel;
+  const rows=state.history.filter(x=>x.target===target).slice().sort((a,b)=>b.score-a.score||new Date(a.date)-new Date(b.date)).slice(0,10);
+  if(!rows.length){b.innerHTML=`<div class="empty-history">Aucun score enregistré pour la cible ${escapeHtml(target)} sur cet appareil.</div>`;return}
+  b.innerHTML=rows.map((x,i)=>`<div class="history-row"><b>${i<3?["🥇","🥈","🥉"][i]:"#"+(i+1)} ${escapeHtml(x.player)}</b><span>${x.score} pts</span><span>${x.average.toFixed(2)} / dart</span><span>${new Date(x.date).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"})}</span></div>`).join("")
+}
 function clearHistory(){if(!confirm("Effacer l'historique local ?"))return;state.history=[];saveHistory([]);renderHistory()}
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 

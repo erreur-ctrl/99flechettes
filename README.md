@@ -1,24 +1,28 @@
 # Open Darts — mini-jeux Autodarts
 
-Version avec deux mini-jeux :
+Mini-jeux web utilisables avec Autodarts sans installation côté joueur.
 
-- **99 Fléchettes** : choisir une cible, 99 lancers, simple=1 / double=2 / triple=3 sur la cible.
-- **9 Fléchettes** : 9 lancers, score réel de chaque zone, objectif = maximum de points.
+## Jeux
 
-Les deux jeux utilisent le flux local du Board Manager Autodarts via WebSocket sur `127.0.0.1:3180` / `localhost:3180`.
+- `/99-darts/` — 99 fléchettes, cible choisie, 1/2/3 points selon simple/double/triple.
+- `/9-darts/` — 9 fléchettes, objectif : meilleur score possible.
 
-## Mise en ligne
+## V5
 
-1. Remplacer les fichiers du dépôt GitHub par le contenu de cette archive.
-2. Vercel redéploie automatiquement si le dépôt est déjà connecté.
-3. Partager l'URL du site.
+- Heat map avec impacts X/Y quand Autodarts fournit les coordonnées.
+- Les statistiques, le feed et la heat map restent visibles après la fin de partie.
+- Écran de résultat affiché sous le dashboard final.
+- Classement local séparé pour chaque mini-jeu.
+- Pseudo + score + date/heure conservés dans le navigateur.
+- Pour 99 Fléchettes, le classement est séparé par cible afin de comparer des scores réalisés sur la même cible.
+- Jusqu'à 100 résultats locaux sont conservés, avec affichage du top 10.
 
-Le joueur n'a rien à installer dans le navigateur. Pour que la détection Autodarts fonctionne, le **Board Manager Autodarts doit être ouvert sur le PC qui joue**.
+## Important : classement local
 
-## Heat map précise
+Le classement actuel utilise `localStorage`. Il est donc conservé sur le navigateur et l'appareil qui jouent, même après fermeture du navigateur. Il n'est pas partagé entre deux personnes ou deux appareils.
 
-Les jeux utilisent les coordonnées X/Y lorsqu'elles sont présentes dans l'événement `Throw detected`. Les impacts sont affichés individuellement sur le board, avec un halo et une couleur selon le type de lancer.
+Pour un classement mondial/partagé entre tous les visiteurs, il faudra ajouter une petite base de données côté serveur (par exemple Supabase) et une API Vercel.
 
-## Correction du dartboard
+## Déploiement
 
-Le 20 est maintenant centré exactement en haut (12 heures). Les secteurs sont construits autour de l'axe central de chaque numéro au lieu d'être décalés d'un demi-secteur.
+Remplacer les fichiers du dépôt GitHub par ceux de cette archive puis laisser Vercel redéployer.
