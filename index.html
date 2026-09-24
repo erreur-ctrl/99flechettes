@@ -1,641 +1,84 @@
-<!DOCTYPE html>
-<html lang="fr" class="dark">
+<!doctype html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>99 Fléchettes au 20 - Autodarts Edition</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dart: {
-                            base: '#0f172a',
-                            card: '#1e293b',
-                            accent: '#06b6d4',
-                            triple: '#10b981',
-                            double: '#3b82f6',
-                            single: '#8b5cf6',
-                            miss: '#ef4444'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>99 Fléchettes — Autodarts</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
-
-    <!-- Navbar Header -->
-    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400">
-                    <i data-lucide="target" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                        99 Fléchettes au 20
-                    </h1>
-                    <p class="text-xs text-slate-400">Autodarts Companion Mode</p>
-                </div>
-            </div>
-
-            <div class="flex items-center space-x-3">
-                <!-- Status WebSocket -->
-                <button id="ws-status-btn" onclick="openWsModal()" class="flex items-center space-x-2 text-xs px-3 py-1.5 rounded-full border border-slate-700 bg-slate-800 hover:bg-slate-700 transition">
-                    <span id="ws-dot" class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                    <span id="ws-text" class="text-slate-300">Déconnecté</span>
-                </button>
-
-                <button onclick="toggleSound()" id="sound-btn" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition text-slate-300">
-                    <i data-lucide="volume-2" class="w-5 h-5"></i>
-                </button>
-
-                <button onclick="openLeaderboard()" class="flex items-center space-x-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg transition shadow-lg shadow-emerald-900/20">
-                    <i data-lucide="trophy" class="w-4 h-4"></i>
-                    <span>Classement</span>
-                </button>
-
-                <button onclick="resetGame()" class="p-2 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-400 rounded-lg transition">
-                    <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Grid -->
-    <main class="max-w-7xl mx-auto px-4 py-6 w-full grow grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Column Left: Game Controls & Visual Target -->
-        <div class="lg:col-span-7 flex flex-col space-y-6">
-
-            <!-- Principal Stats Banner -->
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Restantes</p>
-                    <p id="darts-left" class="text-4xl font-extrabold text-white mt-1">99</p>
-                    <p class="text-[10px] text-slate-500 mt-1">/ 99 fléchettes</p>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Score Total</p>
-                    <p id="total-score" class="text-4xl font-extrabold text-cyan-400 mt-1">0</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Max théorique: 297</p>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Volée 1/33</p>
-                    <p id="current-turn-score" class="text-4xl font-extrabold text-emerald-400 mt-1">0</p>
-                    <p class="text-[10px] text-slate-500 mt-1">Pts cette volée</p>
-                </div>
-            </div>
-
-            <!-- Current Turn Slot Display -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <span class="text-xs font-medium text-slate-400">Volée actuelle :</span>
-                    <div class="flex space-x-2">
-                        <div id="slot-1" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
-                        <div id="slot-2" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
-                        <div id="slot-3" class="w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400">-</div>
-                    </div>
-                </div>
-
-                <button onclick="undoLastDart()" class="flex items-center space-x-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-amber-400 transition">
-                    <i data-lucide="undo-2" class="w-4 h-4"></i>
-                    <span>Annuler</span>
-                </button>
-            </div>
-
-            <!-- Manual Input Buttons -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                        <i data-lucide="disc" class="w-4 h-4 text-cyan-400"></i>
-                        Saisie des Impacts
-                    </h2>
-                    <span class="text-[11px] text-slate-500 font-mono">Raccourcis : <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">S</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">D</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">T</kbd> <kbd class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">M</kbd></span>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <button onclick="addDart('T20')" class="flex flex-col items-center justify-center p-4 bg-emerald-950/40 border border-emerald-500/30 hover:bg-emerald-900/50 rounded-xl transition group">
-                        <span class="text-2xl font-black text-emerald-400 group-hover:scale-110 transition">T20</span>
-                        <span class="text-xs text-emerald-300/70 font-medium mt-1">+3 Points</span>
-                    </button>
-
-                    <button onclick="addDart('D20')" class="flex flex-col items-center justify-center p-4 bg-blue-950/40 border border-blue-500/30 hover:bg-blue-900/50 rounded-xl transition group">
-                        <span class="text-2xl font-black text-blue-400 group-hover:scale-110 transition">D20</span>
-                        <span class="text-xs text-blue-300/70 font-medium mt-1">+2 Points</span>
-                    </button>
-
-                    <button onclick="addDart('S20')" class="flex flex-col items-center justify-center p-4 bg-purple-950/40 border border-purple-500/30 hover:bg-purple-900/50 rounded-xl transition group">
-                        <span class="text-2xl font-black text-purple-400 group-hover:scale-110 transition">S20</span>
-                        <span class="text-xs text-purple-300/70 font-medium mt-1">+1 Point</span>
-                    </button>
-
-                    <button onclick="addDart('MISS')" class="flex flex-col items-center justify-center p-4 bg-rose-950/40 border border-rose-500/30 hover:bg-rose-900/50 rounded-xl transition group">
-                        <span class="text-2xl font-black text-rose-400 group-hover:scale-110 transition">MISS</span>
-                        <span class="text-xs text-rose-300/70 font-medium mt-1">0 Point</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Column Right: Live Stats & History -->
-        <div class="lg:col-span-5 flex flex-col space-y-6">
-
-            <!-- Detailed Stats Panel -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                        <i data-lucide="line-chart" class="w-4 h-4 text-cyan-400"></i>
-                        Statistiques en Direct
-                    </h2>
-                    <span id="hit-rate" class="text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">0% Précision</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                        <p class="text-[11px] text-slate-400">Moyenne / Fléchette</p>
-                        <p id="avg-dart" class="text-xl font-bold text-white mt-0.5">0.00</p>
-                    </div>
-                    <div class="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                        <p class="text-[11px] text-slate-400">Moyenne / Volée</p>
-                        <p id="avg-turn" class="text-xl font-bold text-white mt-0.5">0.00</p>
-                    </div>
-                </div>
-
-                <!-- Hit Distribution Matrix -->
-                <div class="grid grid-cols-4 gap-2 text-center text-xs">
-                    <div class="p-2 bg-emerald-950/20 border border-emerald-500/20 rounded-lg">
-                        <p class="font-bold text-emerald-400">T20</p>
-                        <p id="count-t20" class="text-base font-extrabold text-white my-0.5">0</p>
-                        <p id="pct-t20" class="text-[10px] text-slate-400">0%</p>
-                    </div>
-                    <div class="p-2 bg-blue-950/20 border border-blue-500/20 rounded-lg">
-                        <p class="font-bold text-blue-400">D20</p>
-                        <p id="count-d20" class="text-base font-extrabold text-white my-0.5">0</p>
-                        <p id="pct-d20" class="text-[10px] text-slate-400">0%</p>
-                    </div>
-                    <div class="p-2 bg-purple-950/20 border border-purple-500/20 rounded-lg">
-                        <p class="font-bold text-purple-400">S20</p>
-                        <p id="count-s20" class="text-base font-extrabold text-white my-0.5">0</p>
-                        <p id="pct-s20" class="text-[10px] text-slate-400">0%</p>
-                    </div>
-                    <div class="p-2 bg-rose-950/20 border border-rose-500/20 rounded-lg">
-                        <p class="font-bold text-rose-400">Miss</p>
-                        <p id="count-miss" class="text-base font-extrabold text-white my-0.5">0</p>
-                        <p id="pct-miss" class="text-[10px] text-slate-400">0%</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Turns History Log -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col flex-grow">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                        <i data-lucide="history" class="w-4 h-4 text-cyan-400"></i>
-                        Historique des Volées
-                    </h2>
-                    <span id="turns-count" class="text-xs text-slate-500">0 / 33 volées</span>
-                </div>
-
-                <div id="history-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-xs grow">
-                    <div class="text-center text-slate-500 py-8 italic">Aucune fléchette lancée pour l'instant.</div>
-                </div>
-            </div>
-
-            <!-- Score Evolution Graph -->
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-                <p class="text-xs font-semibold text-slate-400 uppercase mb-2">Évolution du Score</p>
-                <div class="h-28 w-full">
-                    <canvas id="scoreChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Leaderboard Modal -->
-    <div id="leaderboard-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button onclick="closeLeaderboard()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            <div class="flex items-center space-x-3 mb-4">
-                <i data-lucide="trophy" class="w-6 h-6 text-amber-400"></i>
-                <h3 class="text-lg font-bold text-white">Meilleurs Scores Personnels</h3>
-            </div>
-            <div id="leaderboard-content" class="space-y-2 max-h-60 overflow-y-auto pr-1 text-xs"></div>
-        </div>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div>
+      <div class="brand">99 FLÉCHETTES</div>
+      <div class="subtitle">Mini-jeu automatique avec Autodarts</div>
     </div>
+    <div id="connection" class="connection connecting">● Connexion à Autodarts…</div>
+  </header>
 
-    <!-- WebSocket Config Modal -->
-    <div id="ws-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button onclick="closeWsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-                <i data-lucide="x" class="w-5 h-5"></i>
-            </button>
-            
-            <div class="flex items-center space-x-3 mb-3">
-                <i data-lucide="cloud-lightning" class="w-6 h-6 text-cyan-400"></i>
-                <h3 class="text-lg font-bold text-white">Connexion Autodarts</h3>
-            </div>
-            
-            <p class="text-xs text-slate-400 mb-4">
-                Connecte-toi à ton Board Manager local ou active la simulation.
-            </p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">URL WebSocket Autodarts Local</label>
-                    <input type="text" id="ws-url-input" value="ws://localhost:3180/ws" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-cyan-400 font-mono focus:outline-none focus:border-cyan-500">
-                </div>
-
-                <div class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-lg">
-                    <span class="text-xs font-medium text-slate-300">Mode Simulation (Test)</span>
-                    <input type="checkbox" id="sim-mode" onchange="toggleSimMode(this)" class="w-4 h-4 accent-cyan-500 cursor-pointer">
-                </div>
-
-                <div class="flex space-x-2 pt-2">
-                    <button onclick="connectAutodarts()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-lg transition shadow-lg shadow-emerald-900/20">
-                        Se Connecter
-                    </button>
-                    <button onclick="disconnectWs()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-lg transition">
-                        Déconnecter
-                    </button>
-                </div>
-            </div>
-        </div>
+  <section id="setup" class="card setup">
+    <h1>Choisis le chiffre à viser</h1>
+    <p class="hint">
+      Une fléchette sur la cible choisie vaut son multiplicateur :
+      simple = 1 point, double = 2 points, triple = 3 points.
+    </p>
+    <div id="targets" class="targets"></div>
+    <button id="startBtn" class="primary" disabled>COMMENCER</button>
+    <div id="setupMessage" class="message">
+      La page se connecte directement au Board Manager Autodarts de ce PC.
     </div>
+  </section>
 
-    <!-- Application JavaScript Logic -->
-    <script>
-        let darts = [];
-        let turns = [];
-        let currentTurnDarts = [];
-        let totalScore = 0;
-        let soundEnabled = true;
-        let ws = null;
-        let simInterval = null;
-        let scoreChart = null;
+  <section id="game" class="hidden">
+    <section class="card hero">
+      <div class="target-label">CIBLE</div>
+      <div id="targetName" class="target-number">20</div>
+      <div class="score-label">SCORE</div>
+      <div id="score" class="score">0</div>
 
-        function initChart() {
-            const ctx = document.getElementById('scoreChart').getContext('2d');
-            scoreChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [0],
-                    datasets: [{
-                        label: 'Score Cumulé',
-                        data: [0],
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            grid: { color: 'rgba(255,255,255,0.05)' },
-                            ticks: { color: '#64748b', font: { size: 10 } }
-                        }
-                    }
-                }
-            });
-        }
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span><b id="dartCount">0</b> / 99 fléchettes</span>
+          <span id="percent">0%</span>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+      </div>
+    </section>
 
-        function addDart(type) {
-            if (darts.length >= 99) return;
+    <div class="grid">
+      <section class="card">
+        <div class="section-title">
+          <h2>Dernières fléchettes</h2>
+          <span id="liveState" class="pill">EN DIRECT</span>
+        </div>
+        <div id="throws" class="throws"></div>
+      </section>
 
-            let points = 0;
-            if (type === 'T20') points = 3;
-            else if (type === 'D20') points = 2;
-            else if (type === 'S20') points = 1;
+      <section class="card stats">
+        <h2>Statistiques</h2>
+        <div class="stat"><span>Simples réussis</span><b id="singleCount">0</b></div>
+        <div class="stat"><span>Doubles réussis</span><b id="doubleCount">0</b></div>
+        <div class="stat"><span>Triples réussis</span><b id="tripleCount">0</b></div>
+        <div class="stat"><span>Autres / ratés</span><b id="missCount">0</b></div>
+        <button id="resetBtn" class="secondary">ABANDONNER / RESET</button>
+      </section>
+    </div>
+  </section>
 
-            darts.push({ type, points });
-            currentTurnDarts.push({ type, points });
-            totalScore += points;
+  <section id="finish" class="card finish hidden">
+    <div class="trophy">🏆</div>
+    <div class="finish-title">TERMINÉ !</div>
+    <div id="finalScore" class="final-score">0</div>
+    <div class="finish-sub">points sur 99 fléchettes</div>
+    <div id="finalTarget" class="finish-target"></div>
+    <button id="againBtn" class="primary">REJOUER</button>
+  </section>
 
-            playSound(type);
-
-            if (currentTurnDarts.length === 3 || darts.length === 99) {
-                turns.push([...currentTurnDarts]);
-                currentTurnDarts = [];
-            }
-
-            updateUI();
-        }
-
-        function undoLastDart() {
-            if (darts.length === 0) return;
-
-            const last = darts.pop();
-            totalScore -= last.points;
-
-            if (currentTurnDarts.length > 0) {
-                currentTurnDarts.pop();
-            } else if (turns.length > 0) {
-                currentTurnDarts = turns.pop();
-                currentTurnDarts.pop();
-            }
-
-            updateUI();
-        }
-
-        function resetGame() {
-            if (darts.length > 0 && !confirm("Voulez-vous réinitialiser la partie actuelle ?")) return;
-            darts = [];
-            turns = [];
-            currentTurnDarts = [];
-            totalScore = 0;
-            updateUI();
-        }
-
-        function updateUI() {
-            const dartsLeft = 99 - darts.length;
-            document.getElementById('darts-left').innerText = dartsLeft;
-            document.getElementById('total-score').innerText = totalScore;
-
-            const currentTurnScore = currentTurnDarts.reduce((acc, d) => acc + d.points, 0);
-            document.getElementById('current-turn-score').innerText = currentTurnScore;
-
-            for (let i = 1; i <= 3; i++) {
-                const slot = document.getElementById(`slot-${i}`);
-                if (currentTurnDarts[i - 1]) {
-                    slot.innerText = currentTurnDarts[i - 1].type;
-                    slot.className = "w-10 h-10 border rounded-lg flex items-center justify-center font-bold text-xs " + getBadgeStyle(currentTurnDarts[i - 1].type);
-                } else {
-                    slot.innerText = "-";
-                    slot.className = "w-10 h-10 border border-slate-700 bg-slate-950 rounded-lg flex items-center justify-center font-bold text-slate-400";
-                }
-            }
-
-            const countT20 = darts.filter(d => d.type === 'T20').length;
-            const countD20 = darts.filter(d => d.type === 'D20').length;
-            const countS20 = darts.filter(d => d.type === 'S20').length;
-            const countMiss = darts.filter(d => d.type === 'MISS').length;
-            const total = darts.length || 1;
-
-            document.getElementById('count-t20').innerText = countT20;
-            document.getElementById('count-d20').innerText = countD20;
-            document.getElementById('count-s20').innerText = countS20;
-            document.getElementById('count-miss').innerText = countMiss;
-
-            document.getElementById('pct-t20').innerText = Math.round((countT20 / total) * 100) + '%';
-            document.getElementById('pct-d20').innerText = Math.round((countD20 / total) * 100) + '%';
-            document.getElementById('pct-s20').innerText = Math.round((countS20 / total) * 100) + '%';
-            document.getElementById('pct-miss').innerText = Math.round((countMiss / total) * 100) + '%';
-
-            const hitCount = countT20 + countD20 + countS20;
-            const hitRate = darts.length ? Math.round((hitCount / darts.length) * 100) : 0;
-            document.getElementById('hit-rate').innerText = `${hitRate}% Précision`;
-
-            const avgDart = darts.length ? (totalScore / darts.length).toFixed(2) : '0.00';
-            const avgTurn = turns.length ? (totalScore / turns.length).toFixed(2) : '0.00';
-            document.getElementById('avg-dart').innerText = avgDart;
-            document.getElementById('avg-turn').innerText = avgTurn;
-
-            const historyList = document.getElementById('history-list');
-            document.getElementById('turns-count').innerText = `${turns.length} / 33 volées`;
-
-            if (turns.length === 0 && currentTurnDarts.length === 0) {
-                historyList.innerHTML = `<div class="text-center text-slate-500 py-8 italic">Aucune fléchette lancée pour l'instant.</div>`;
-            } else {
-                let html = '';
-                turns.forEach((t, index) => {
-                    const turnPts = t.reduce((a, b) => a + b.points, 0);
-                    html = `
-                        <div class="flex items-center justify-between bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-                            <span class="font-bold text-slate-400">Volée #${index + 1}</span>
-                            <div class="flex space-x-1">
-                                ${t.map(d => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${getBadgeStyle(d.type)}">${d.type}</span>`).join('')}
-                            </div>
-                            <span class="font-bold text-emerald-400">+${turnPts} pts</span>
-                        </div>
-                    ` + html;
-                });
-                historyList.innerHTML = html;
-            }
-
-            if (scoreChart) {
-                let cumulative = 0;
-                const chartData = [0];
-                const labels = [0];
-                turns.forEach((t, i) => {
-                    cumulative += t.reduce((a, b) => a + b.points, 0);
-                    chartData.push(cumulative);
-                    labels.push(i + 1);
-                });
-                scoreChart.data.labels = labels;
-                scoreChart.data.datasets[0].data = chartData;
-                scoreChart.update();
-            }
-
-            if (darts.length === 99) {
-                setTimeout(endGame, 300);
-            }
-        }
-
-        function getBadgeStyle(type) {
-            if (type === 'T20') return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-            if (type === 'D20') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-            if (type === 'S20') return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-            return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
-        }
-
-        function endGame() {
-            saveScore(totalScore);
-            alert(`Partie terminée !\nScore Final : ${totalScore} / 297 pts`);
-            openLeaderboard();
-        }
-
-        function saveScore(score) {
-            let scores = JSON.parse(localStorage.getItem('darts_99_scores') || '[]');
-            scores.push({
-                score,
-                date: new Date().toLocaleDateString('fr-FR'),
-                avg: (score / 99).toFixed(2)
-            });
-            scores.sort((a, b) => b.score - a.score);
-            scores = scores.slice(0, 5);
-            localStorage.setItem('darts_99_scores', JSON.stringify(scores));
-        }
-
-        function openLeaderboard() {
-            const list = document.getElementById('leaderboard-content');
-            let scores = JSON.parse(localStorage.getItem('darts_99_scores') || '[]');
-            
-            if (scores.length === 0) {
-                list.innerHTML = `<p class="text-center text-slate-500 py-4">Aucun score enregistré.</p>`;
-            } else {
-                list.innerHTML = scores.map((s, i) => `
-                    <div class="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
-                        <div class="flex items-center space-x-3">
-                            <span class="font-bold text-amber-400">#${i + 1}</span>
-                            <span class="text-slate-300">${s.date}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-sm font-bold text-emerald-400">${s.score} pts</span>
-                            <span class="text-[10px] text-slate-500 block">${s.avg} / fléchette</span>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('leaderboard-modal').classList.remove('hidden');
-            document.getElementById('leaderboard-modal').classList.add('flex');
-        }
-
-        function closeLeaderboard() {
-            document.getElementById('leaderboard-modal').classList.add('hidden');
-            document.getElementById('leaderboard-modal').classList.remove('flex');
-        }
-
-        function playSound(type) {
-            if (!soundEnabled) return;
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-
-                if (type === 'T20') {
-                    osc.frequency.setValueAtTime(800, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
-                } else if (type === 'D20') {
-                    osc.frequency.setValueAtTime(600, ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.15);
-                } else if (type === 'S20') {
-                    osc.frequency.setValueAtTime(400, ctx.currentTime);
-                } else {
-                    osc.frequency.setValueAtTime(150, ctx.currentTime);
-                }
-
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-
-                osc.start();
-                osc.stop(ctx.currentTime + 0.15);
-            } catch (e) {}
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            document.getElementById('sound-btn').className = soundEnabled 
-                ? "p-2 bg-slate-800 hover:bg-slate-700 rounded-lg border border-slate-700 transition text-slate-300"
-                : "p-2 bg-rose-950/40 border border-rose-500/30 text-rose-400 rounded-lg transition";
-        }
-
-        function openWsModal() {
-            document.getElementById('ws-modal').classList.remove('hidden');
-            document.getElementById('ws-modal').classList.add('flex');
-        }
-
-        function closeWsModal() {
-            document.getElementById('ws-modal').classList.add('hidden');
-            document.getElementById('ws-modal').classList.remove('flex');
-        }
-
-        function connectAutodarts() {
-            const targetUrl = document.getElementById('ws-url-input').value.trim();
-            disconnectWs();
-
-            try {
-                ws = new WebSocket(targetUrl);
-
-                ws.onopen = () => {
-                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50";
-                    document.getElementById('ws-text').innerText = "Connecté";
-                    closeWsModal();
-                };
-
-                ws.onmessage = (event) => {
-                    try {
-                        const data = JSON.parse(event.data);
-                        const seg = data.segment || data.item || (data.event && data.event.segment) || '';
-                        
-                        if (seg === 'T20' || seg === '20T') addDart('T20');
-                        else if (seg === 'D20' || seg === '20D') addDart('D20');
-                        else if (seg === 'S20' || seg === '20S' || seg === '20') addDart('S20');
-                        else if (seg) addDart('MISS');
-                    } catch (e) {}
-                };
-
-                ws.onerror = () => {
-                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-rose-500";
-                    document.getElementById('ws-text').innerText = "Erreur Connection";
-                };
-
-                ws.onclose = () => {
-                    document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse";
-                    document.getElementById('ws-text').innerText = "Déconnecté";
-                };
-            } catch (e) {
-                alert("Erreur de connexion WebSocket");
-            }
-        }
-
-        function disconnectWs() {
-            if (ws) ws.close();
-            if (simInterval) clearInterval(simInterval);
-        }
-
-        function toggleSimMode(checkbox) {
-            if (checkbox.checked) {
-                closeWsModal();
-                document.getElementById('ws-dot').className = "w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse";
-                document.getElementById('ws-text').innerText = "Simulation";
-                simInterval = setInterval(() => {
-                    const rand = Math.random();
-                    if (rand < 0.3) addDart('T20');
-                    else if (rand < 0.5) addDart('D20');
-                    else if (rand < 0.8) addDart('S20');
-                    else addDart('MISS');
-                }, 1500);
-            } else {
-                if (simInterval) clearInterval(simInterval);
-                document.getElementById('ws-text').innerText = "Déconnecté";
-            }
-        }
-
-        // Écouteur pour le script Tampermonkey
-        window.addEventListener("message", (event) => {
-            if (event.data && event.data.type === "AUTODARTS_THROW") {
-                const val = event.data.value;
-                if (val === 'T20' || val === '20T') addDart('T20');
-                else if (val === 'D20' || val === '20D') addDart('D20');
-                else if (val === 'S20' || val === '20S' || val === '20') addDart('S20');
-                else if (val) addDart('MISS');
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT') return;
-            const key = e.key.toUpperCase();
-            if (key === 'T') addDart('T20');
-            if (key === 'D') addDart('D20');
-            if (key === 'S') addDart('S20');
-            if (key === 'M' || key === '0') addDart('MISS');
-            if (key === 'Z') undoLastDart();
-        });
-
-        lucide.createIcons();
-        initChart();
-    </script>
+  <footer>
+    <span>Connexion directe au Board Manager Autodarts — aucune installation supplémentaire.</span>
+    <span>Board Manager : <code>localhost:3180</code></span>
+  </footer>
+</main>
+<script src="app.js"></script>
 </body>
 </html>
