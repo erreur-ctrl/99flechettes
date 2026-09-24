@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>9 Fléchettes — Open Darts</title><link rel="stylesheet" href="style.css">
+</head>
+<body><div class="app">
+<header class="topbar"><a class="brand" href="../"><span class="brand-mark">◎</span> OPEN DARTS</a><div id="connection" class="status connecting"><span class="status-dot"></span>Connexion à Autodarts…</div></header>
+<main class="screen">
+<section id="setup" class="setup-screen">
+<div class="page-title"><a class="back" href="../">‹ MINI-JEUX</a><div class="eyebrow">9 FLÉCHETTES</div><h1>Fais le <span>plus gros score.</span></h1><p>9 lancers. Toutes les zones comptent. Le but est simplement de marquer un maximum de points.</p></div>
+<div class="setup-layout">
+<section class="card target-card"><div class="card-head"><div><div class="eyebrow">DÉFI</div><h2>9 fléchettes. Un score.</h2></div><div class="selected-badge">MAX 9</div></div>
+<div class="board-picker"><svg id="boardSvg" viewBox="0 0 500 500" aria-label="Dartboard"></svg></div>
+<div class="target-actions"><div class="target-display"><b>Objectif : le meilleur score possible</b></div><button id="startBtn" class="primary start" disabled><span>🎯</span> COMMENCER <b>9</b></button><div id="setupMessage" class="setup-message">Connexion à Autodarts…</div></div></section>
+<aside class="card rules-card"><div class="eyebrow">RÈGLES</div><h2>Tout compte.</h2>
+<div class="rule"><span class="rule-icon single"></span><div><b>Simple</b><small>Valeur du secteur</small></div></div>
+<div class="rule"><span class="rule-icon double"></span><div><b>Double</b><small>2 × la valeur</small></div></div>
+<div class="rule"><span class="rule-icon triple"></span><div><b>Triple</b><small>3 × la valeur</small></div></div>
+<div class="rule"><span class="rule-icon miss"></span><div><b>Bull</b><small>25 ou 50 points</small></div></div>
+<div class="rule-divider"></div><div class="mini-stat"><span>Nombre de fléchettes</span><b>9</b></div><div class="mini-stat"><span>Score théorique max</span><b>540</b></div>
+<div class="player-box"><label for="playerName">JOUEUR</label><input id="playerName" maxlength="24" placeholder="Ton prénom ou pseudo"></div>
+</aside></div></section>
+
+<section id="game" class="hidden">
+<div class="game-header"><div><a class="back" href="../">‹ MINI-JEUX</a><div class="game-target-label">MODE</div><div class="game-target">9 FLÉCHETTES</div></div><div id="gamePlayer" class="player-pill">JOUEUR</div></div>
+<section class="card score-card"><div class="score-top"><span>FLÉCHETTES <b><span id="dartCount">0</span>/9</b></span><span>PROGRESSION <i id="percent">0%</i></span></div><div class="progress"><div id="progressBar"></div></div><div class="score-main"><div class="score-caption">SCORE</div><div id="score" class="score">0</div><div class="score-sub">moyenne <b id="average">0.00</b> / fléchette · moyenne 3 fléchettes <b id="avg3all">0.00</b></div></div></section>
+<div class="dashboard">
+<section class="card live-board-card"><div class="card-head"><div><div class="eyebrow">HEAT MAP</div><h2>Où partent tes fléchettes ?</h2></div><div class="heat-legend"><span>0</span><i></i><span>beaucoup</span></div></div>
+<div class="heat-wrap"><svg id="heatSvg" viewBox="0 0 500 500" aria-label="Heat map en temps réel"></svg><div class="heat-center"><b id="scoreCenter">0</b><span>points</span></div></div>
+<div class="coord-status"><span id="coordMode">EN ATTENTE DES COORDONNÉES</span><b><span id="exactHits">0</span>/9 impacts positionnés</b></div>
+<div class="heat-foot"><span><b id="targetHits">0</b> triples</span><span><b id="currentStreak">0</b> série ≥ 20 pts</span><span><b id="bestStreak">0</b> meilleure série</span></div></section>
+<aside class="side-column">
+<section class="card stats-card"><div class="eyebrow">LIVE STATS</div><h2>Ta partie</h2>
+<div class="stat"><span>Simples</span><b id="singleCount">0</b></div><div class="stat"><span>Doubles</span><b id="doubleCount">0</b></div><div class="stat"><span>Triples</span><b id="tripleCount">0</b></div><div class="stat"><span>Bull / Bullseye</span><b id="bullCount">0</b></div><div class="stat"><span>Score / 9</span><b id="pace9">0</b></div><div class="stat highlight"><span>Dernier lancer</span><b id="lastDart">—</b></div></section>
+<section class="card stats-card compact-stats"><div class="eyebrow">FORME</div><h2>Derniers lancers</h2><div class="trend-grid"><div><span>3 dernières</span><b id="avg3">0.00</b></div><div><span>Meilleur lancer</span><b id="bestDart">0</b></div><div><span>Triple / 3D</span><b id="tripleRate">0%</b></div><div><span>Exactitude</span><b id="exactRate">0%</b></div></div></section>
+<button id="resetBtn" class="secondary full">ABANDONNER LA PARTIE</button></aside></div>
+<section class="card feed-card"><div class="card-head"><div><div class="eyebrow">EN DIRECT</div><h2>Les 9 fléchettes</h2></div><div class="live-pill"><span></span> LIVE</div></div><div id="throws" class="throws"></div></section>
+</section>
+<section id="finish" class="card finish hidden"><div class="finish-trophy">🏆</div><div id="finishPlayer" class="finish-player">JOUEUR</div><div id="finalScore" class="final-score">0</div><div class="finish-points">POINTS</div><div id="finalTarget" class="finish-target">9 fléchettes</div>
+<div class="result-stats"><div><b id="finalAverage">0.00</b><span>MOY. / FLÉCHETTE</span></div><div><b id="finalBest">0</b><span>MEILLEUR LANCER</span></div><div><b id="finalTriples">0</b><span>TRIPLES</span></div><div><b id="finalBulls">0</b><span>BULLS</span></div></div>
+<div id="bestMessage" class="best-message"></div><div class="finish-actions"><button id="againBtn" class="primary">REJOUER</button><button id="shareBtn" class="secondary">↗ PARTAGER</button></div><div id="shareMessage" class="share-message"></div>
+<div class="history-card"><div class="card-head"><div><div class="eyebrow">HISTORIQUE LOCAL</div><h2>Meilleurs scores</h2></div><button id="clearHistory" class="text-button">EFFACER</button></div><div id="history" class="history"></div></div></section>
+<footer><span>Open Darts · 9 Fléchettes</span><span>Détection locale via Autodarts · aucune installation</span></footer>
+</main></div><script src="game.js"></script></body></html>

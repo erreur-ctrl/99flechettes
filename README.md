@@ -1,32 +1,24 @@
-# Open Darts — 99 Fléchettes
+# Open Darts — mini-jeux Autodarts
 
-Mini-jeu web pour Autodarts, hébergé sur Vercel.
+Version avec deux mini-jeux :
 
-## V3 — Heat map précise
+- **99 Fléchettes** : choisir une cible, 99 lancers, simple=1 / double=2 / triple=3 sur la cible.
+- **9 Fléchettes** : 9 lancers, score réel de chaque zone, objectif = maximum de points.
 
-Cette version conserve la détection automatique locale via le Board Manager et ajoute une heat map basée sur les coordonnées `x/y` du lancer lorsqu'elles sont présentes dans les données Autodarts.
+Les deux jeux utilisent le flux local du Board Manager Autodarts via WebSocket sur `127.0.0.1:3180` / `localhost:3180`.
 
-- position réelle de chaque impact sur le dartboard ;
-- 99 impacts conservés pendant la partie ;
-- halo de densité autour des impacts ;
-- couleur selon simple / double / triple / autre ;
-- dernier impact légèrement agrandi ;
-- survol d'un impact pour voir son numéro et ses coordonnées ;
-- compteur `X/99 impacts positionnés` ;
-- indication `COORDONNÉES RÉELLES` lorsque des coordonnées sont reçues ;
-- statistiques temps réel, séries, moyennes et historique local.
+## Mise en ligne
 
-Le code accepte plusieurs formes courantes de données (`coords.x/y`, `coordinates.x/y`, `position.x/y`, ou `x/y`). Les coordonnées normalisées Autodarts sont affichées autour du centre du board, avec `x` vers la droite et `y` vers le haut.
+1. Remplacer les fichiers du dépôt GitHub par le contenu de cette archive.
+2. Vercel redéploie automatiquement si le dépôt est déjà connecté.
+3. Partager l'URL du site.
 
-## Déploiement Vercel
+Le joueur n'a rien à installer dans le navigateur. Pour que la détection Autodarts fonctionne, le **Board Manager Autodarts doit être ouvert sur le PC qui joue**.
 
-1. Remplacer les fichiers de ton dépôt GitHub par ceux de cette archive.
-2. Vercel détecte automatiquement la mise à jour du dépôt.
-3. Ouvrir l'URL Vercel sur le PC qui possède le Board Manager Autodarts.
-4. Le joueur n'a rien à installer : la page utilise la connexion locale au Board Manager.
+## Heat map précise
 
-## Important pour la heat map
+Les jeux utilisent les coordonnées X/Y lorsqu'elles sont présentes dans l'événement `Throw detected`. Les impacts sont affichés individuellement sur le board, avec un halo et une couleur selon le type de lancer.
 
-Le navigateur doit être ouvert sur le même PC/réseau local que le Board Manager Autodarts, comme pour la version précédente.
+## Correction du dartboard
 
-Si l'indicateur reste sur `EN ATTENTE DES COORDONNÉES` alors que les lancers sont bien détectés, cela signifie que le flux local utilisé par cette installation ne transmet pas les coordonnées dans l'événement `Throw detected`. Dans ce cas, le jeu continue à compter les lancers normalement ; il faudra brancher la heat map sur le flux Autodarts qui expose les `coords`.
+Le 20 est maintenant centré exactement en haut (12 heures). Les secteurs sont construits autour de l'axe central de chaque numéro au lieu d'être décalés d'un demi-secteur.
