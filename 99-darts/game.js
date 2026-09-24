@@ -1,7 +1,7 @@
 const WS_URLS=["ws://127.0.0.1:3180/api/events?type=state","ws://localhost:3180/api/events?type=state"];
 const ORDER=[20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
 const COLORS={black:"#11131a",cream:"#eee9d4",red:"#f15b62",green:"#61b86f"};
-const state={target:20,targetLabel:"20",player:"",darts:0,score:0,singles:0,doubles:0,triples:0,misses:0,running:false,connected:false,socket:null,urlIndex:0,latestNumThrows:null,baselineThrows:null,lastSignature:null,audio:null,history:loadHistory(),throws:[],sectorHits:{},ringHits:{single:0,double:0,triple:0,other:0},currentStreak:0,bestStreak:0};
+const state={target:20,targetLabel:"20",player:"",darts:0,score:0,singles:0,doubles:0,triples:0,misses:0,running:false,connected:false,socket:null,urlIndex:0,latestNumThrows:null,baselineThrows:null,lastSignature:null,audio:null,history:loadHistory(),throws:[],sectorHits:{},ringHits:{single:0,double:0,triple:0,other:0},currentStreak:0,bestStreak:0,coordsExact:0};
 
 const $=id=>document.getElementById(id);
 function polar(cx,cy,r,a){a=(a-90)*Math.PI/180;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]}
@@ -26,11 +26,15 @@ function normalizeSegment(s){
   return {number:Number(s?.number??0),mult:Number(s?.multiplier??0),name:s?.name||"MISS",bed:(s?.bed||"Outside").toLowerCase()};
 }
 function ringFrom(mult,hit){if(!hit)return"other";return mult===3?"triple":mult===2?"double":"single"}
+function extractCoords(t){const cs=[t?.coords,t?.coordinates,t?.position,t?.point,t?.hit?.coords,t?.dart?.coords];for(const c of cs){if(c!=null){const x=Number(c.x),y=Number(c.y);if(Number.isFinite(x)&&Number.isFinite(y))return{x,y}}}const x=Number(t?.x),y=Number(t?.y);return Number.isFinite(x)&&Number.isFinite(y)?{x,y}:null}
+function normalizeCoords(c){if(!c)return null;let x=Number(c.x),y=Number(c.y);if(!Number.isFinite(x)||!Number.isFinite(y))return null;const m=Math.max(Math.abs(x),Math.abs(y));if(m>1.5){x/=m;y/=m}return{x,y}}
 function handleAutodarts(msg){
   if(msg?.type!=="state"||!msg.data)return;
   const d=msg.data;if(d.event!=="Throw detected"||!Array.isArray(d.throws)||!d.throws.length)return;
-  const nt=Number(d.numThrows??0),s=normalizeSegment(d.throws[d.throws.length-1]?.segment);if(!s)return;
-  const sig=`${nt}|${s.name}|${s.number}|${s.mult}|${s.bed}`;
+  const rawThrow=d.throws[d.throws.length-1];
+  const nt=Number(d.numThrows??0),s=normalizeSegment(rawThrow?.segment);if(!s)return;
+  const coords=normalizeCoords(extractCoords(rawThrow));
+  const sig=`${nt}|${s.name}|${s.number}|${s.mult}|${s.bed}|${coords?`${coords.x.toFixed(5)},${coords.y.toFixed(5)}`:"none"}`;
   if(nt!==state.latestNumThrows&&sig!==state.lastSignature){state.latestNumThrows=nt;state.lastSignature=sig}
   if(!state.running||state.baselineThrows!==null&&nt<=state.baselineThrows||state.darts>=99)return;
 
@@ -41,7 +45,8 @@ function handleAutodarts(msg){
   const ring=ringFrom(points,hit);state.ringHits[ring]=(state.ringHits[ring]||0)+1;
   state.sectorHits[s.number]=(state.sectorHits[s.number]||0)+1;
   state.currentStreak=hit?state.currentStreak+1:0;state.bestStreak=Math.max(state.bestStreak,state.currentStreak);
-  state.throws.push({n:state.darts,name:s.name,number:s.number,mult:s.mult,bed:s.bed,hit,points,ring});
+  if(coords) state.coordsExact++;
+  state.throws.push({n:state.darts,name:s.name,number:s.number,mult:s.mult,bed:s.bed,hit,points,ring,coords});
   if(state.throws.length>99)state.throws.shift();
   addThrow(s.name,hit,points,s.mult);playDartSound(hit,s.mult);updateGameUI();renderHeatmap();
   if(state.darts>=99)finishGame();
@@ -51,7 +56,7 @@ function startGame(){
   if(!state.connected||state.target===null)return;
   state.player=(($("playerName").value||"Joueur").trim()||"Joueur").slice(0,24);localStorage.setItem("99darts.player",state.player);
   state.darts=state.score=state.singles=state.doubles=state.triples=state.misses=0;state.running=true;state.baselineThrows=state.latestNumThrows;state.lastSignature=null;
-  state.throws=[];state.sectorHits={};state.ringHits={single:0,double:0,triple:0,other:0};state.currentStreak=0;state.bestStreak=0;
+  state.throws=[];state.sectorHits={};state.ringHits={single:0,double:0,triple:0,other:0};state.currentStreak=0;state.bestStreak=0;state.coordsExact=0;
   $("gameTarget").textContent=state.targetLabel;$("gamePlayer").textContent=state.player.toUpperCase();$("throws").innerHTML="";
   $("setup").classList.add("hidden");$("finish").classList.add("hidden");$("game").classList.remove("hidden");updateGameUI();renderHeatmap();playStartSound();
 }
@@ -87,35 +92,12 @@ function renderHistory(){const b=$("history");if(!state.history.length){b.innerH
 function clearHistory(){if(!confirm("Effacer l'historique local ?"))return;state.history=[];saveHistory([]);renderHistory()}
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
-function buildHeatBoard(){
-  const svg=$("heatSvg"),ns="http://www.w3.org/2000/svg",cx=250,cy=250;svg.innerHTML="";
-  const R={o:214,d:184,to:126,ti:108,bo:40,bi:18};
-  const bg=document.createElementNS(ns,"circle");bg.setAttribute("cx",cx);bg.setAttribute("cy",cy);bg.setAttribute("r",226);bg.setAttribute("fill","#070a12");bg.setAttribute("stroke","#303a58");bg.setAttribute("stroke-width",2);svg.appendChild(bg);
-  ORDER.forEach((num,i)=>{
-    const a1=i*18+.8,a2=(i+1)*18-.8;
-    const layers=[["single",R.ti,R.d],["outer",R.d,R.o],["triple",R.to,R.ti],["inner",R.bo,R.to]];
-    layers.forEach(([bed,r1,r2])=>{const p=document.createElementNS(ns,"path");p.setAttribute("d",wedge(cx,cy,r1,r2,a1,a2));p.dataset.number=num;p.dataset.bed=bed;p.classList.add("heat-segment");svg.appendChild(p)});
-    const [x,y]=polar(cx,cy,240,(a1+a2)/2);const t=document.createElementNS(ns,"text");t.setAttribute("x",x);t.setAttribute("y",y);t.setAttribute("text-anchor","middle");t.setAttribute("dominant-baseline","middle");t.classList.add("heat-label");t.textContent=num;svg.appendChild(t);
-  });
-  const bull=document.createElementNS(ns,"circle");bull.setAttribute("cx",cx);bull.setAttribute("cy",cy);bull.setAttribute("r",R.bo);bull.classList.add("heat-bull");bull.dataset.number="25";svg.appendChild(bull);
-  const bullseye=document.createElementNS(ns,"circle");bullseye.setAttribute("cx",cx);bullseye.setAttribute("cy",cy);bullseye.setAttribute("r",R.bi);bullseye.classList.add("heat-bullseye");bullseye.dataset.number="25";svg.appendChild(bullseye);
-  const c=document.createElementNS(ns,"text");c.setAttribute("x",cx);c.setAttribute("y",cy+4);c.setAttribute("text-anchor","middle");c.classList.add("heat-center-label");c.textContent="HEAT";svg.appendChild(c);
-  renderHeatmap();
-}
-function heatAlpha(count,max){return count?Math.min(.86,.14+.72*(count/max)):0}
-function renderHeatmap(){
-  if(!$("heatSvg"))return;
-  const max=Math.max(1,...Object.values(state.sectorHits));
-  document.querySelectorAll(".heat-segment").forEach(el=>{
-    const n=Number(el.dataset.number),count=state.sectorHits[n]||0,alpha=heatAlpha(count,max);
-    const isTarget=n===state.target;
-    el.style.fill=`rgba(98,230,168,${alpha})`;el.style.stroke=isTarget?"#dfffee":"rgba(255,255,255,.07)";el.style.strokeWidth=isTarget?"2.5":"1";
-    el.classList.toggle("target-zone",isTarget);
-  });
-  document.querySelector(".heat-bull").style.fill=state.sectorHits[25]?`rgba(255,202,92,${heatAlpha(state.sectorHits[25],max)})`:"rgba(255,255,255,.04)";
-  document.querySelector(".heat-bullseye").style.fill=state.sectorHits[25]?`rgba(255,91,98,${heatAlpha(state.sectorHits[25],max)})`:"rgba(255,255,255,.04)";
-  document.querySelectorAll(".heat-label").forEach(t=>{const n=Number(t.textContent);t.style.opacity=(state.sectorHits[n]||state.target===n)?.95:.42;t.style.fill=state.target===n?"#62e6a8":"#dce3fa"});
-}
+function buildHeatBoard(){const svg=$("heatSvg"),ns="http://www.w3.org/2000/svg",cx=250,cy=250;svg.innerHTML="";const R={o:214,d:184,to:126,ti:108,bo:40,bi:18};const bg=document.createElementNS(ns,"circle");bg.setAttribute("cx",cx);bg.setAttribute("cy",cy);bg.setAttribute("r",226);bg.setAttribute("fill","#070a12");bg.setAttribute("stroke","#303a58");bg.setAttribute("stroke-width",2);svg.appendChild(bg);ORDER.forEach((num,i)=>{const a1=i*18+.8,a2=(i+1)*18-.8;[["single",R.ti,R.d],["outer",R.d,R.o],["triple",R.to,R.ti],["inner",R.bo,R.to]].forEach(([bed,r1,r2])=>{const p=document.createElementNS(ns,"path");p.setAttribute("d",wedge(cx,cy,r1,r2,a1,a2));p.dataset.number=num;p.dataset.bed=bed;p.classList.add("heat-segment");svg.appendChild(p)});const [x,y]=polar(cx,cy,240,(a1+a2)/2),t=document.createElementNS(ns,"text");t.setAttribute("x",x);t.setAttribute("y",y);t.setAttribute("text-anchor","middle");t.setAttribute("dominant-baseline","middle");t.classList.add("heat-label");t.textContent=num;svg.appendChild(t)});const bull=document.createElementNS(ns,"circle");bull.setAttribute("cx",cx);bull.setAttribute("cy",cy);bull.setAttribute("r",R.bo);bull.classList.add("heat-bull");bull.dataset.number="25";svg.appendChild(bull);const bullseye=document.createElementNS(ns,"circle");bullseye.setAttribute("cx",cx);bullseye.setAttribute("cy",cy);bullseye.setAttribute("r",R.bi);bullseye.classList.add("heat-bullseye");bullseye.dataset.number="25";svg.appendChild(bullseye);const c=document.createElementNS(ns,"text");c.setAttribute("x",cx);c.setAttribute("y",cy+4);c.setAttribute("text-anchor","middle");c.classList.add("heat-center-label");c.textContent="HEAT";svg.appendChild(c);renderHeatmap()}
+function heatAlpha(count,max){return count?Math.min(.82,.10+.68*(count/max)):0}
+function coordToSvg(c){return c?{x:250+c.x*205,y:250-c.y*205}:null}
+function dartColor(t){return !t.hit?"#8a94ad":t.mult===3?"#62e6a8":t.mult===2?"#ff6974":"#ffca5c"}
+function renderImpactLayer(svg,ns){const layer=document.createElementNS(ns,"g");layer.classList.add("impact-layer");state.throws.forEach(t=>{const pos=coordToSvg(t.coords);if(!pos)return;const color=dartColor(t);const halo=document.createElementNS(ns,"circle");halo.setAttribute("cx",pos.x);halo.setAttribute("cy",pos.y);halo.setAttribute("r",t.hit?15:11);halo.setAttribute("fill",color);halo.setAttribute("fill-opacity",t.hit?0.12:0.07);halo.classList.add("impact-halo");layer.appendChild(halo);const dot=document.createElementNS(ns,"circle");dot.setAttribute("cx",pos.x);dot.setAttribute("cy",pos.y);dot.setAttribute("r",t.n===state.darts?5.2:3.6);dot.setAttribute("fill",color);dot.setAttribute("stroke","#080b12");dot.setAttribute("stroke-width",2);dot.classList.add("impact-dot");dot.dataset.n=t.n;const title=document.createElementNS(ns,"title");title.textContent=`#${t.n} · ${t.name} · +${t.points} · x ${t.coords.x.toFixed(3)} · y ${t.coords.y.toFixed(3)}`;dot.appendChild(title);layer.appendChild(dot)});svg.appendChild(layer)}
+function renderHeatmap(){const svg=$("heatSvg");if(!svg)return;const max=Math.max(1,...Object.values(state.sectorHits));document.querySelectorAll(".heat-segment").forEach(el=>{const n=Number(el.dataset.number),count=state.sectorHits[n]||0,alpha=heatAlpha(count,max),isTarget=n===state.target;el.style.fill=count?`rgba(98,230,168,${alpha})`:"rgba(255,255,255,.035)";el.style.stroke=isTarget?"#dfffee":"rgba(255,255,255,.07)";el.style.strokeWidth=isTarget?"2.5":"1";el.classList.toggle("target-zone",isTarget)});const hb=svg.querySelector(".heat-bull"),hs=svg.querySelector(".heat-bullseye");if(hb)hb.style.fill=state.sectorHits[25]?`rgba(255,202,92,${heatAlpha(state.sectorHits[25],max)})`:"rgba(255,255,255,.04)";if(hs)hs.style.fill=state.sectorHits[25]?`rgba(255,91,98,${heatAlpha(state.sectorHits[25],max)})`:"rgba(255,255,255,.04)";document.querySelectorAll(".heat-label").forEach(t=>{const n=Number(t.textContent);t.style.opacity=(state.sectorHits[n]||state.target===n)?0.95:0.42;t.style.fill=state.target===n?"#62e6a8":"#dce3fa"});const old=svg.querySelector(".impact-layer");if(old)old.remove();renderImpactLayer(svg,"http://www.w3.org/2000/svg");const exact=state.throws.filter(t=>t.coords).length;if($("exactHits"))$("exactHits").textContent=exact;if($("coordMode"))$("coordMode").textContent=exact?"COORDONNÉES RÉELLES":"EN ATTENTE DES COORDONNÉES"}
 
 function audioContext(){if(!state.audio)state.audio=new(window.AudioContext||window.webkitAudioContext)();if(state.audio.state==="suspended")state.audio.resume();return state.audio}
 function beep(freq,dur,type="sine",gain=.035,delay=0){try{const a=audioContext(),o=a.createOscillator(),g=a.createGain(),t=a.currentTime+delay;o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(a.destination);o.start(t);o.stop(t+dur+.03)}catch(_){}}
