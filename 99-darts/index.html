@@ -1,1 +1,161 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>99 Fléchettes — Open Darts</title><meta name="description" content="99 fléchettes : mini-jeu automatique pour Autodarts."><link rel="stylesheet" href="style.css"></head><body><div class="background"></div><main class="app"><header class="topbar"><a class="brand" href="../"><span class="brand-mark">◉</span><span>OPEN DARTS</span></a><div class="status" id="connection"><span class="status-dot"></span><span>Connexion…</span></div></header><section id="setup" class="screen"><div class="page-title"><a href="../" class="back">← MINI-JEUX</a><div class="eyebrow">JEU 01</div><h1>99 <span>FLÉCHETTES</span></h1><p>Choisis une cible. Pendant 99 lancers, chaque simple vaut 1 point, chaque double 2 et chaque triple 3.</p></div><div class="setup-layout"><section class="card target-card"><div class="card-head"><div><div class="eyebrow">ÉTAPE 01</div><h2>Choisis ta cible</h2></div><div class="selected-badge" id="selectedBadge">AUCUNE</div></div><div class="board-picker"><svg id="boardSvg" viewBox="0 0 500 500" aria-label="Sélecteur de cible de fléchettes"></svg></div><div class="target-actions"><div id="targetName" class="target-display">Choisis un secteur</div><div class="target-buttons" id="targetButtons"></div></div><button id="startBtn" class="primary start" disabled><span>COMMENCER LA PARTIE</span><b>→</b></button><div class="setup-message" id="setupMessage">Connexion directe à ton Board Manager Autodarts…</div></section><aside class="card rules-card"><div class="eyebrow">RÈGLES</div><h2>Simple. 99 lancers.</h2><div class="rule"><span class="rule-icon single"></span><div><b>Simple</b><small>+1 point</small></div></div><div class="rule"><span class="rule-icon double"></span><div><b>Double</b><small>+2 points</small></div></div><div class="rule"><span class="rule-icon triple"></span><div><b>Triple</b><small>+3 points</small></div></div><div class="rule"><span class="rule-icon miss"></span><div><b>Autre secteur</b><small>+0 point</small></div></div><div class="rule-divider"></div><div class="mini-stat"><span>Nombre de fléchettes</span><b>99</b></div><div class="mini-stat"><span>Détection</span><b>Autodarts</b></div><div class="player-box"><label for="playerName">NOM DU JOUEUR</label><input id="playerName" maxlength="24" placeholder="Ton prénom ou pseudo" autocomplete="nickname"></div></aside></div></section><section id="game" class="screen hidden"><div class="game-header"><div><a href="../" class="back">← MINI-JEUX</a><div class="game-target-label">CIBLE</div><div id="gameTarget" class="game-target">20</div></div><div class="player-pill" id="gamePlayer">JOUEUR</div></div><div class="score-card card"><div class="score-top"><div><span>FLÉCHETTES</span><b><i id="dartCount">0</i> / 99</b></div><div><span>PROGRESSION</span><b id="percent">0%</b></div></div><div class="progress"><div id="progressBar"></div></div><div class="score-main"><div class="score-caption">SCORE</div><div id="score" class="score">0</div></div></div><div class="game-grid"><section class="card feed-card"><div class="card-head"><div><div class="eyebrow">EN DIRECT</div><h2>Dernières fléchettes</h2></div><div id="livePill" class="live-pill"><span></span> LIVE</div></div><div id="throws" class="throws"></div></section><aside class="side-column"><section class="card stats-card"><div class="eyebrow">STATISTIQUES</div><h2>Ta partie</h2><div class="stat"><span>Simples</span><b id="singleCount">0</b></div><div class="stat"><span>Doubles</span><b id="doubleCount">0</b></div><div class="stat"><span>Triples</span><b id="tripleCount">0</b></div><div class="stat"><span>Autres / ratés</span><b id="missCount">0</b></div><div class="stat highlight"><span>Moyenne / fléchette</span><b id="average">0.00</b></div></section><button id="resetBtn" class="secondary full">ABANDONNER LA PARTIE</button></aside></div></section><section id="finish" class="screen hidden"><div class="finish card"><div class="eyebrow">PARTIE TERMINÉE</div><div class="finish-trophy">🏆</div><div id="finishPlayer" class="finish-player">JOUEUR</div><div id="finalScore" class="final-score">0</div><div class="finish-points">POINTS</div><div id="finalTarget" class="finish-target">Cible : 20</div><div class="result-stats"><div><b id="finalAverage">0.00</b><span>moy. / fléchette</span></div><div><b id="finalSingles">0</b><span>simples</span></div><div><b id="finalDoubles">0</b><span>doubles</span></div><div><b id="finalTriples">0</b><span>triples</span></div></div><div class="finish-actions"><button id="shareBtn" class="secondary">↗ PARTAGER LE RÉSULTAT</button><button id="againBtn" class="primary">REJOUER <b>→</b></button></div><div id="shareMessage" class="share-message"></div><div id="bestMessage" class="best-message"></div></div><section class="card history-card"><div class="card-head"><div><div class="eyebrow">HISTORIQUE LOCAL</div><h2>Résultats récents</h2></div><button id="clearHistory" class="text-button">Effacer</button></div><div id="history" class="history"></div></section></section><footer><span>Open Darts · 99 Fléchettes</span><span>Détection locale via Autodarts · aucune installation</span></footer></main><script src="game.js"></script></body></html>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>99 Fléchettes — Open Darts</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <a class="brand" href="../"><span class="brand-mark">◎</span> OPEN DARTS</a>
+    <div id="connection" class="status connecting"><span class="status-dot"></span>Connexion à Autodarts…</div>
+  </header>
+
+  <main class="screen">
+    <section id="setup" class="setup-screen">
+      <div class="page-title">
+        <a class="back" href="../">‹ MINI-JEUX</a>
+        <div class="eyebrow">99 FLÉCHETTES</div>
+        <h1>Choisis ta <span>cible.</span></h1>
+        <p>99 lancers. Chaque fléchette compte. Simple = 1, double = 2, triple = 3.</p>
+      </div>
+
+      <div class="setup-layout">
+        <section class="card target-card">
+          <div class="card-head">
+            <div><div class="eyebrow">CIBLE</div><h2 id="targetName">CIBLE 20</h2></div>
+            <div id="selectedBadge" class="selected-badge">20</div>
+          </div>
+          <div class="board-picker"><svg id="boardSvg" viewBox="0 0 500 500" aria-label="Dartboard"></svg></div>
+          <div class="target-actions">
+            <div class="target-display">Cible sélectionnée : <b id="targetDisplay">20</b></div>
+            <div id="targetButtons" class="target-buttons"></div>
+            <button id="startBtn" class="primary start" disabled><span>🎯</span> COMMENCER <b>99</b></button>
+            <div id="setupMessage" class="setup-message">Connexion à Autodarts…</div>
+          </div>
+        </section>
+
+        <aside class="card rules-card">
+          <div class="eyebrow">RÈGLES</div>
+          <h2>Simple & efficace.</h2>
+          <div class="rule"><span class="rule-icon single"></span><div><b>Simple</b><small>+1 point</small></div></div>
+          <div class="rule"><span class="rule-icon double"></span><div><b>Double</b><small>+2 points</small></div></div>
+          <div class="rule"><span class="rule-icon triple"></span><div><b>Triple</b><small>+3 points</small></div></div>
+          <div class="rule"><span class="rule-icon miss"></span><div><b>Autre secteur</b><small>+0 point</small></div></div>
+          <div class="rule-divider"></div>
+          <div class="mini-stat"><span>Nombre de fléchettes</span><b>99</b></div>
+          <div class="mini-stat"><span>Score théorique max</span><b>297</b></div>
+          <div class="player-box">
+            <label for="playerName">JOUEUR</label>
+            <input id="playerName" maxlength="24" placeholder="Ton prénom ou pseudo">
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="game" class="hidden">
+      <div class="game-header">
+        <div>
+          <a class="back" href="../">‹ MINI-JEUX</a>
+          <div class="game-target-label">CIBLE</div>
+          <div id="gameTarget" class="game-target">20</div>
+        </div>
+        <div id="gamePlayer" class="player-pill">JOUEUR</div>
+      </div>
+
+      <section class="card score-card">
+        <div class="score-top">
+          <span>FLÉCHETTES <b><span id="dartCount">0</span>/99</b></span>
+          <span>PROGRESSION <i id="percent">0%</i></span>
+        </div>
+        <div class="progress"><div id="progressBar"></div></div>
+        <div class="score-main">
+          <div class="score-caption">SCORE</div>
+          <div id="score" class="score">0</div>
+          <div class="score-sub">moyenne <b id="average">0.00</b> / fléchette · rythme final <b id="projected">0</b> pts</div>
+        </div>
+      </section>
+
+      <div class="dashboard">
+        <section class="card live-board-card">
+          <div class="card-head">
+            <div><div class="eyebrow">HEAT MAP</div><h2>Où partent tes fléchettes ?</h2></div>
+            <div class="heat-legend"><span>0</span><i></i><span>beaucoup</span></div>
+          </div>
+          <div class="heat-wrap">
+            <svg id="heatSvg" viewBox="0 0 500 500" aria-label="Heat map en temps réel"></svg>
+            <div class="heat-center"><b id="targetHits">0</b><span>touches cible</span></div>
+          </div>
+          <div class="heat-foot">
+            <span><b id="heatTargetRate">0%</b> de réussite sur la cible</span>
+            <span><b id="currentStreak">0</b> série actuelle</span>
+            <span><b id="bestStreak">0</b> meilleure série</span>
+          </div>
+        </section>
+
+        <aside class="side-column">
+          <section class="card stats-card">
+            <div class="eyebrow">LIVE STATS</div><h2>Ta partie</h2>
+            <div class="stat"><span>Simples cible</span><b id="singleCount">0</b></div>
+            <div class="stat"><span>Doubles cible</span><b id="doubleCount">0</b></div>
+            <div class="stat"><span>Triples cible</span><b id="tripleCount">0</b></div>
+            <div class="stat"><span>Autres / ratés</span><b id="missCount">0</b></div>
+            <div class="stat"><span>Réussite cible</span><b id="hitRate">0%</b></div>
+            <div class="stat highlight"><span>Dernier lancer</span><b id="lastDart">—</b></div>
+          </section>
+
+          <section class="card stats-card compact-stats">
+            <div class="eyebrow">FORME</div><h2>Derniers lancers</h2>
+            <div class="trend-grid">
+              <div><span>3 dernières</span><b id="avg3">0.00</b></div>
+              <div><span>9 dernières</span><b id="avg9">0.00</b></div>
+              <div><span>Meilleur lancer</span><b id="bestDart">0</b></div>
+              <div><span>Score / 33</span><b id="pace33">0</b></div>
+            </div>
+          </section>
+
+          <button id="resetBtn" class="secondary full">ABANDONNER LA PARTIE</button>
+        </aside>
+      </div>
+
+      <section class="card feed-card">
+        <div class="card-head">
+          <div><div class="eyebrow">EN DIRECT</div><h2>Dernières fléchettes</h2></div>
+          <div class="live-pill"><span></span> LIVE</div>
+        </div>
+        <div id="throws" class="throws"></div>
+      </section>
+    </section>
+
+    <section id="finish" class="card finish hidden">
+      <div class="finish-trophy">🏆</div>
+      <div id="finishPlayer" class="finish-player">JOUEUR</div>
+      <div id="finalScore" class="final-score">0</div>
+      <div class="finish-points">POINTS</div>
+      <div id="finalTarget" class="finish-target">Cible : 20</div>
+      <div class="result-stats">
+        <div><b id="finalAverage">0.00</b><span>MOY. / FLÉCHETTE</span></div>
+        <div><b id="finalSingles">0</b><span>SIMPLES</span></div>
+        <div><b id="finalDoubles">0</b><span>DOUBLES</span></div>
+        <div><b id="finalTriples">0</b><span>TRIPLES</span></div>
+      </div>
+      <div id="bestMessage" class="best-message"></div>
+      <div class="finish-actions">
+        <button id="againBtn" class="primary">REJOUER</button>
+        <button id="shareBtn" class="secondary">↗ PARTAGER</button>
+      </div>
+      <div id="shareMessage" class="share-message"></div>
+      <div class="history-card">
+        <div class="card-head"><div><div class="eyebrow">HISTORIQUE LOCAL</div><h2>Meilleurs résultats</h2></div><button id="clearHistory" class="text-button">EFFACER</button></div>
+        <div id="history" class="history"></div>
+      </div>
+    </section>
+
+    <footer><span>Open Darts · 99 Fléchettes</span><span>Détection locale via Autodarts · aucune installation</span></footer>
+  </main>
+</div>
+<script src="game.js"></script>
+</body>
+</html>

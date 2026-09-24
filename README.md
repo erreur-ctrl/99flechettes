@@ -23,3 +23,7 @@ Remplace les fichiers de ton dépôt GitHub par ceux-ci puis laisse Vercel redé
 
 ## Autodarts
 Le navigateur du joueur se connecte à `ws://127.0.0.1:3180/api/events?type=state`. Autodarts / Board Manager doit donc être actif sur le même PC que le navigateur.
+
+
+## Version 2 — dashboard live
+Cette version ajoute une heat map de répartition des secteurs détectés, taux de réussite, séries, moyennes 3/9 dernières, meilleur lancer, rythme projeté et affichage temps réel plus dense.
